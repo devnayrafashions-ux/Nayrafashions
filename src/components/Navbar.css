@@ -1,0 +1,466 @@
+/* ==========================================
+   GOOGLE FONTS
+========================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Montserrat:wght@300;400;500;600&display=swap');
+
+/* ==========================================
+   ROOT COLORS
+========================================== */
+
+:root{
+  --primary:#7B1B1B;
+  --gold:#C9A24B;
+  --cream:#FAF6F0;
+  --text:#2B2B2B;
+  --light:#8A7A6A;
+  --white:#ffffff;
+}
+
+/* ==========================================
+   RESET
+========================================== */
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+}
+
+a{
+  text-decoration:none;
+  color:inherit;
+}
+
+button{
+  border:none;
+  background:none;
+  cursor:pointer;
+}
+
+img{
+  display:block;
+  max-width:100%;
+}
+
+/* ==========================================
+   ANNOUNCEMENT BAR
+========================================== */
+
+.announcement-bar{
+
+  width:100%;
+  min-height:48px;
+
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:14px;
+
+  background:var(--primary);
+
+  color:#F3DFB2;
+
+  font-family:'Montserrat',sans-serif;
+  font-size:13px;
+  font-weight:500;
+  letter-spacing:2px;
+
+  padding:10px 20px;
+
+}
+
+.announcement-bar .sparkle{
+  color:var(--gold);
+  font-size:14px;
+  line-height:1;
+}
+
+.divider{
+  opacity:.45;
+}
+
+/* ==========================================
+   NAVBAR
+========================================== */
+
+.navbar{
+
+  position:sticky;
+  top:0;
+  z-index:999;
+
+  width:100%;
+
+  background:var(--cream);
+
+  display:grid;
+
+  grid-template-columns:
+  80px
+  1fr
+  220px;
+
+  align-items:center;
+
+  padding:8px 48px;
+
+  border-bottom:1px solid rgba(0,0,0,.08);
+
+  transition:.35s ease;
+
+}
+
+.navbar.scrolled{
+
+  padding:5px 48px;
+
+  box-shadow:
+  0 5px 18px rgba(0,0,0,.08);
+
+}
+
+/* ==========================================
+   LEFT
+========================================== */
+
+.nav-left{
+
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+
+}
+
+.menu-btn{
+
+  width:42px;
+  height:42px;
+
+  display:flex;
+  justify-content:center;
+  align-items:center;
+
+  color:var(--text);
+
+  transition:.3s;
+
+}
+
+.menu-btn:hover{
+
+  color:var(--primary);
+
+}
+
+/* ==========================================
+   CENTER LOGO
+========================================== */
+
+.logo{
+
+  justify-self:center;
+
+  display:flex;
+
+  align-items:flex-end;
+
+  justify-content:center;
+
+  text-decoration:none;
+
+  transform:translateX(35px);
+
+}
+
+.logo-img{
+
+  height:84px;
+
+  width:auto;
+
+  object-fit:contain;
+
+  margin-right:-18px;
+
+  margin-bottom:6px;
+
+  transition:.3s;
+
+}
+
+.logo-small{
+
+  height:68px;
+
+}
+
+.logo-text{
+
+  display:flex;
+
+  flex-direction:column;
+
+  justify-content:center;
+
+  align-items:center;
+
+  margin-left:0;
+
+}
+
+.logo-main{
+
+  font-family:'Cormorant Garamond',serif;
+
+  font-size:34px;
+
+  font-weight:600;
+
+  color:var(--primary);
+
+  letter-spacing:5px;
+
+  line-height:1;
+
+}
+
+.logo-sub{
+
+  margin-top:6px;
+
+  display:flex;
+
+  align-items:center;
+
+  gap:8px;
+
+  font-family:'Montserrat',sans-serif;
+
+  font-size:10px;
+
+  color:var(--gold);
+
+  letter-spacing:5px;
+
+}
+
+.logo-sub::before,
+.logo-sub::after{
+
+  content:"";
+
+  display:inline-block;
+
+  width:18px;
+
+  height:1px;
+
+  background:var(--gold);
+
+}
+
+/* ==========================================
+   RIGHT SECTION
+========================================== */
+
+.nav-right {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 10px;
+}
+
+.nav-right a {
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+}
+
+.nav-icon {
+    width: 38px;
+    height: 38px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    border: none;
+    background: transparent;
+
+    color: var(--text);
+
+    cursor: pointer;
+
+    position: relative;
+
+    border-radius: 50%;
+
+    transition: all .3s ease;
+}
+
+.nav-icon:hover {
+    color: var(--primary);
+    background: rgba(123, 27, 27, 0.08);
+    transform: translateY(-2px);
+}
+
+.nav-icon svg {
+    width: 22px;
+    height: 22px;
+    stroke-width: 2;
+}
+
+/* ==========================================
+   CART BADGE
+========================================== */
+
+.badge {
+    position: absolute;
+
+    top: 0px;
+    right: -2px;
+
+    width: 18px;
+    height: 18px;
+
+    border-radius: 50%;
+
+    background: var(--primary);
+    color: white;
+
+    border: 2px solid var(--cream);
+
+    font-size: 10px;
+    font-weight: 600;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* ==========================================
+   LOGO HOVER
+========================================== */
+
+.logo {
+    transition: all .35s ease;
+}
+
+.logo:hover {
+    transform: translateX(35px) scale(1.02);
+}
+
+.logo:hover .logo-main {
+    color: #651818;
+}
+
+.logo:hover .logo-sub {
+    color: #D4AF37;
+}
+
+.logo:hover .logo-img {
+    transform: scale(1.03);
+}
+
+/* ==========================================
+   SMOOTH TRANSITIONS
+========================================== */
+
+.logo,
+.logo-img,
+.logo-text,
+.logo-main,
+.logo-sub,
+.nav-icon,
+.menu-btn,
+.navbar {
+    transition: all .3s ease;
+}
+
+/* ==========================================
+   REMOVE DEFAULT FOCUS
+========================================== */
+
+button:focus,
+button:active {
+    outline: none;
+    box-shadow: none;
+}
+
+a:focus {
+    outline: none;
+}
+
+/* ==========================================
+   DESKTOP ALIGNMENT
+========================================== */
+
+.nav-left,
+.logo,
+.nav-right {
+    min-height: 44px;
+}
+
+.logo {
+    align-self: center;
+    justify-self: center;
+}
+
+.nav-right {
+    align-self: center;
+}
+
+.nav-left {
+    align-self: center;
+}
+
+/* ==========================================
+   MOBILE MENU
+========================================== */
+
+.mobile-menu{
+
+  position:absolute;
+
+  top:100%;
+
+  left:0;
+
+  width:100%;
+
+  background:var(--cream);
+
+  display:flex;
+
+  flex-direction:column;
+
+  padding:18px 48px;
+
+  gap:16px;
+
+  font-family:'Montserrat',sans-serif;
+
+  font-size:14px;
+
+  letter-spacing:1px;
+
+  border-bottom:1px solid rgba(0,0,0,.08);
+
+  box-shadow:0 10px 20px rgba(0,0,0,.06);
+
+}
+
+.mobile-menu a{
+
+  color:var(--text);
+
+  transition:.3s;
+
+}
+
+.mobile-menu a:hover{
+
+  color:var(--primary);
+
+}

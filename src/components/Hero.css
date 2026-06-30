@@ -1,0 +1,225 @@
+.hero {
+  position: relative;
+  height: calc(100vh - 90px);
+  min-height: 600px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background-color: var(--crimson-dark);
+}
+
+.hero-bg {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 60% 50%, #9b2020 0%, #5a1313 40%, #3a0b0b 100%);
+}
+
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(90,19,19,0.3) 0%, rgba(58,11,11,0.6) 100%);
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  color: var(--white);
+  padding: 0 20px;
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+.hero.loaded .hero-content {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.hero-season {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 11px;
+  letter-spacing: 4px;
+  color: var(--gold-light);
+  margin-bottom: 24px;
+  opacity: 0;
+  transition: opacity 0.8s ease 0.2s;
+}
+
+.hero.loaded .hero-season {
+  opacity: 1;
+}
+
+.hero-title {
+  display: flex;
+  flex-direction: column;
+  font-size: clamp(72px, 12vw, 140px);
+  font-weight: 400;
+  line-height: 0.9;
+  letter-spacing: -2px;
+  color: var(--white);
+  margin-bottom: 28px;
+}
+
+.hero-title span:nth-child(1) {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.7s ease 0.3s, transform 0.7s ease 0.3s;
+}
+.hero-title span:nth-child(2) {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.7s ease 0.5s, transform 0.7s ease 0.5s;
+}
+
+.hero.loaded .hero-title span {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.hero-divider {
+  width: 40px;
+  height: 1px;
+  background-color: var(--gold);
+  margin: 0 auto 24px;
+  opacity: 0;
+  transition: opacity 0.8s ease 0.7s;
+}
+
+.hero.loaded .hero-divider {
+  opacity: 1;
+}
+
+.hero-subtitle {
+  font-size: 14px;
+  letter-spacing: 1px;
+  color: rgba(255,255,255,0.75);
+  margin-bottom: 40px;
+  font-weight: 300;
+  opacity: 0;
+  transition: opacity 0.8s ease 0.8s;
+}
+
+.hero.loaded .hero-subtitle {
+  opacity: 1;
+}
+
+.hero-buttons {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+  opacity: 0;
+  transition: opacity 0.8s ease 0.9s;
+}
+
+.hero.loaded .hero-buttons {
+  opacity: 1;
+}
+
+.btn-gold {
+  background-color: var(--gold);
+  color: var(--white);
+  border: none;
+  padding: 14px 32px;
+  font-size: 11px;
+  letter-spacing: 3px;
+  font-weight: 500;
+  transition: background-color 0.3s, transform 0.2s;
+}
+
+.btn-gold:hover {
+  background-color: var(--gold-light);
+  transform: translateY(-1px);
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--white);
+  border: 1px solid rgba(255,255,255,0.5);
+  padding: 14px 32px;
+  font-size: 11px;
+  letter-spacing: 3px;
+  font-weight: 500;
+  transition: border-color 0.3s, background-color 0.3s;
+}
+
+.btn-outline:hover {
+  border-color: var(--white);
+  background-color: rgba(255,255,255,0.05);
+}
+
+.hero-scroll {
+  position: absolute;
+  bottom: 32px;
+  right: 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: rgba(255,255,255,0.4);
+  font-size: 9px;
+  letter-spacing: 3px;
+  writing-mode: vertical-rl;
+  z-index: 2;
+}
+
+.scroll-line {
+  width: 1px;
+  height: 40px;
+  background: linear-gradient(to bottom, rgba(255,255,255,0.4), transparent);
+  animation: scrollPulse 2s ease infinite;
+}
+
+@keyframes scrollPulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+@media (max-width: 768px) {
+  .hero {
+    height: calc(100vh - 70px);
+    min-height: 500px;
+  }
+
+  .hero-content {
+    padding: 0 24px;
+    width: 100%;
+  }
+
+  .hero-title {
+    font-size: clamp(42px, 13vw, 72px);
+    letter-spacing: -1px;
+    margin-bottom: 20px;
+  }
+
+  .hero-subtitle {
+    font-size: 12px;
+    padding: 0 10px;
+  }
+
+  .hero-buttons {
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 0 20px;
+  }
+
+  .btn-gold,
+  .btn-outline {
+    width: 100%;
+    text-align: center;
+    padding: 14px 20px;
+  }
+
+  .hero-scroll {
+    bottom: 20px;
+    right: 16px;
+  }
+
+  .announcement-bar {
+    font-size: 10px;
+    letter-spacing: 1px;
+    padding: 8px 12px;
+  }
+}

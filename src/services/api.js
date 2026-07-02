@@ -36,8 +36,10 @@ async function apiFetch(endpoint, options = {}) {
   }
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new Error(error.detail || error.message || 'API error');
+    const errorData = await response.json().catch(() => ({}));
+    const err = new Error(errorData.detail || errorData.message || 'API error');
+    err.response = { status: response.status, data: errorData };
+    throw err;
   }
 
   if (response.status === 204) return null;
@@ -56,8 +58,10 @@ async function apiFetchForm(endpoint, formData, method = 'POST') {
     body: formData,
   });
   if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new Error(error.detail || error.message || 'Upload error');
+    const errorData = await response.json().catch(() => ({}));
+    const err = new Error(errorData.detail || errorData.message || 'Upload error');
+    err.response = { status: response.status, data: errorData };
+    throw err;
   }
   return response.json();
 }

@@ -8,14 +8,30 @@
   margin-bottom: 56px;
 }
 
-.products-grid {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 24px;
+.products-scroll-container {
   width: 100%;
   max-width: 1300px;
   margin: 0 auto;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 40px, #000 calc(100% - 40px), transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0, #000 40px, #000 calc(100% - 40px), transparent 100%);
+}
+
+.products-grid {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 24px;
+  width: max-content;
+  animation: scrollLeft 28s linear infinite;
+}
+
+.products-scroll-container:hover .products-grid {
+  animation-play-state: paused;
+}
+
+@keyframes scrollLeft {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
 }
 
 .product-card {
@@ -206,8 +222,6 @@
   100% { background-position: 200% 0; }
 }
 
-/* FIND and REPLACE everything from @media (max-width: 900px) downward */
-
 /* =========================
    TABLET
 ========================= */
@@ -221,7 +235,7 @@
   }
 
   .product-card {
-    width: calc(50% - 10px);
+    width: 220px;
   }
 }
 
@@ -240,11 +254,11 @@
 
   .products-grid {
     gap: 16px;
-    justify-content: space-between;
+    animation-duration: 22s;
   }
 
   .product-card {
-    width: calc(50% - 8px);
+    width: 170px;
   }
 
   .product-name {
@@ -296,11 +310,11 @@
 
   .products-grid {
     gap: 14px;
+    animation-duration: 18s;
   }
 
   .product-card {
-    width: 100%;
-    max-width: 320px;
+    width: 150px;
   }
 
   .product-image-wrap {

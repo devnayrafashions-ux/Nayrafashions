@@ -1,4 +1,4 @@
-  import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
   import { Plus, Edit2, Trash2 } from 'lucide-react';
   import { categoriesAPI } from '../../services/api';
   import { useToast } from '../../context/ToastContext';
@@ -8,7 +8,7 @@
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [editCat, setEditCat] = useState(null);
-    const [form, setForm] = useState({ name: '', description: '' });
+    const [form, setForm] = useState({ name: '' });
     const [imageFile, setImageFile] = useState(null);
     const { success, error } = useToast();
 
@@ -22,14 +22,13 @@
 
     useEffect(() => { fetch(); }, []);
 
-    const openAdd = () => { setForm({ name: '', description: '' }); setEditCat(null); setImageFile(null); setShowModal(true); };
-    const openEdit = (c) => { setForm({ name: c.name, description: c.description || '' }); setEditCat(c); setImageFile(null); setShowModal(true); };
+    const openAdd = () => { setForm({ name: '' }); setEditCat(null); setImageFile(null); setShowModal(true); };
+    const openEdit = (c) => { setForm({ name: c.name }); setEditCat(c); setImageFile(null); setShowModal(true); };
 
     const handleSubmit = async (e) => {
       e.preventDefault();
       const fd = new FormData();
       fd.append('name', form.name);
-      fd.append('description', form.description);
       if (imageFile) fd.append('image', imageFile);
       try {
         if (editCat) { await categoriesAPI.update(editCat.id, fd); success('Category updated!'); }
@@ -83,10 +82,6 @@
                 <div className="admin-form-group">
                   <label>Category Name *</label>
                   <input required value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder="e.g. Kurtas & Sets" />
-                </div>
-                <div className="admin-form-group">
-                  <label>Description</label>
-                  <textarea rows={3} value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} placeholder="Category description..." />
                 </div>
                 <div className="admin-form-group">
                   <label>Category Image</label>

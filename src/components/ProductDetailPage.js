@@ -17,9 +17,8 @@ const ProductDetailPage = () => {
   const [selectedColor, setSelectedColor] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [wishlisted, setWishlisted] = useState(false);
-  const [reviewForm, setReviewForm] = useState({ rating: 5, title: '', body: '' });
-  const [reviewOpen, setReviewOpen] = useState(false);
-  const [submittingReview, setSubmittingReview] = useState(false);
+  const [relatedProducts, setRelatedProducts] = useState([]);
+  const [relatedWishlist, setRelatedWishlist] = useState([]);
   const { user } = useAuth();
   const { addToCart } = useCart();
   const { success, error } = useToast();
@@ -34,9 +33,35 @@ const ProductDetailPage = () => {
     if (user && product) {
       wishlistAPI.get().then(d => {
         setWishlisted((d || []).some(p => p.id === product.id));
+        setRelatedWishlist((d || []).map(p => p.id));
       }).catch(() => {});
     }
   }, [user, product]);
+
+  // Fetch other dress suggestions once we know the product/category
+  useEffect(() => {
+    if (!product) return;
+
+    const loadRelated = (params) =>
+      productsAPI.getAll(params)
+        .then(d => Array.isArray(d) ? d : d.results || [])
+        .then(items => items.filter(p => p.id !== product.id).slice(0, 8));
+
+    const params = product.category
+      ? { category: product.category.slug, page_size: 9 }
+      : { page_size: 9 };
+
+    loadRelated(params)
+      .then(items => {
+        if (items.length > 0) {
+          setRelatedProducts(items);
+        } else {
+          // fallback: no other products in same category
+          return loadRelated({ page_size: 9 }).then(setRelatedProducts);
+        }
+      })
+      .catch(() => setRelatedProducts([]));
+  }, [product]);
 
   // ✅ Use product.sizes (JSONField) first, fall back to variants for backward compat
   const sizes = product
@@ -80,17 +105,14 @@ const ProductDetailPage = () => {
     success(wishlisted ? 'Removed from wishlist' : 'Added to wishlist');
   };
 
-  const submitReview = async (e) => {
-    e.preventDefault();
-    setSubmittingReview(true);
-    try {
-      await productsAPI.addReview(product.id, reviewForm);
-      success('Review submitted!');
-      setReviewOpen(false);
-      const updated = await productsAPI.getBySlug(slug);
-      setProduct(updated);
-    } catch (err) { error(err.message); }
-    finally { setSubmittingReview(false); }
+  const toggleRelatedWishlist = async (productId) => {
+    if (!user) { window.location.href = '/login'; return; }
+    await wishlistAPI.toggle(productId);
+    setRelatedWishlist(prev =>
+      prev.includes(productId)
+        ? prev.filter(id => id !== productId)
+        : [...prev, productId]
+    );
   };
 
   if (loading) return <div className="page-wrapper"><div className="spinner" /></div>;
@@ -182,7 +204,7 @@ const ProductDetailPage = () => {
                   stroke="#C8A96E"
                 />
               ))}
-              <span>{avgRating} ({product.reviews?.length || 0} reviews)</span>
+              <span>{avgRating}</span>
             </div>
           )}
 
@@ -281,96 +303,45 @@ const ProductDetailPage = () => {
         </div>
       </div>
 
-      {/* Reviews */}
-      <div className="pd-reviews-section">
-        <div className="pd-reviews-header">
-          <h2>Customer Reviews</h2>
-          {user && !reviewOpen && (
-            <button className="btn-outline" onClick={() => setReviewOpen(true)}>
-              WRITE A REVIEW
-            </button>
-          )}
-        </div>
-
-        {reviewOpen && (
-          <form className="review-form" onSubmit={submitReview}>
-            <h3>Your Review</h3>
-            <div className="form-group">
-              <label>Rating</label>
-              <div className="rating-input">
-                {[1,2,3,4,5].map(s => (
-                  <Star
-                    key={s} size={20}
-                    fill={s <= reviewForm.rating ? '#C8A96E' : 'none'}
-                    stroke="#C8A96E"
-                    style={{ cursor: 'pointer' }}
-                    onClick={() => setReviewForm(p => ({ ...p, rating: s }))}
+      {/* You May Also Like */}
+      {relatedProducts.length > 0 && (
+        <div className="pd-related-section">
+          <h2 className="pd-related-heading">YOU MAY ALSO LIKE</h2>
+          <div className="pd-related-grid">
+            {relatedProducts.map(p => (
+              <div key={p.id} className="pd-related-card">
+                <Link to={`/products/${p.slug}`} className="pd-related-image-wrap">
+                  <img
+                    src={p.primary_image || 'https://images.unsplash.com/photo-1583391733956-6c78276477e2?w=500&q=80'}
+                    alt={p.name}
+                    className="pd-related-image"
+                    onError={e => {
+                      e.target.src = 'https://images.unsplash.com/photo-1583391733956-6c78276477e2?w=500&q=80';
+                    }}
                   />
-                ))}
-              </div>
-            </div>
-            <div className="form-group">
-              <label>Title</label>
-              <input
-                type="text"
-                value={reviewForm.title}
-                onChange={e => setReviewForm(p => ({ ...p, title: e.target.value }))}
-                placeholder="Great quality..."
-              />
-            </div>
-            <div className="form-group">
-              <label>Review</label>
-              <textarea
-                rows="4"
-                value={reviewForm.body}
-                onChange={e => setReviewForm(p => ({ ...p, body: e.target.value }))}
-                placeholder="Tell others about your experience..."
-                required
-              />
-            </div>
-            <div style={{ display: 'flex', gap: 12 }}>
-              <button type="submit" className="btn-gold" disabled={submittingReview}>
-                {submittingReview ? 'SUBMITTING...' : 'SUBMIT REVIEW'}
-              </button>
-              <button type="button" className="btn-outline" onClick={() => setReviewOpen(false)}>
-                CANCEL
-              </button>
-            </div>
-          </form>
-        )}
-
-        {product.reviews?.length === 0 && !reviewOpen && (
-          <p className="no-reviews">No reviews yet. Be the first to review!</p>
-        )}
-
-        <div className="reviews-list">
-          {product.reviews?.map(r => (
-            <div key={r.id} className="review-card">
-              <div className="review-header">
-                <div>
-                  <p className="reviewer-name">{r.user_name}</p>
-                  <div className="review-stars">
-                    {[1,2,3,4,5].map(s => (
-                      <Star
-                        key={s} size={12}
-                        fill={s <= r.rating ? '#C8A96E' : 'none'}
-                        stroke="#C8A96E"
-                      />
-                    ))}
+                  <button
+                    className={`pd-related-wish-btn ${relatedWishlist.includes(p.id) ? 'active' : ''}`}
+                    onClick={(e) => { e.preventDefault(); toggleRelatedWishlist(p.id); }}
+                  >
+                    <Heart size={16} fill={relatedWishlist.includes(p.id) ? '#7B1B1B' : 'none'} />
+                  </button>
+                </Link>
+                <div className="pd-related-info">
+                  <Link to={`/products/${p.slug}`}>
+                    <h3 className="pd-related-name">{p.name}</h3>
+                  </Link>
+                  <div className="pd-related-pricing">
+                    <span className="pd-related-price">₹{Number(p.price).toLocaleString()}</span>
+                    {p.original_price && (
+                      <span className="pd-related-original">₹{Number(p.original_price).toLocaleString()}</span>
+                    )}
                   </div>
                 </div>
-                <p className="review-date">
-                  {new Date(r.created_at).toLocaleDateString('en-IN', {
-                    year: 'numeric', month: 'long', day: 'numeric'
-                  })}
-                </p>
               </div>
-              {r.title && <p className="review-title">{r.title}</p>}
-              <p className="review-body">{r.body}</p>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

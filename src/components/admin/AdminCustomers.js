@@ -35,7 +35,7 @@ const AdminCustomers = () => {
         ) : (
           <table className="admin-table">
             <thead>
-              <tr><th>Customer</th><th>Email</th><th>Phone</th><th>Joined</th><th>Orders</th><th>Actions</th></tr>
+              <tr><th>Customer</th><th>Email</th><th>Joined</th><th>Orders</th><th>Actions</th></tr>
             </thead>
             <tbody>
               {customers.map(c => (
@@ -47,7 +47,6 @@ const AdminCustomers = () => {
                     </div>
                   </td>
                   <td>{c.email}</td>
-                  <td>{c.phone || '-'}</td>
                   <td>{new Date(c.date_joined).toLocaleDateString('en-IN')}</td>
                   <td>{c.order_count || 0}</td>
                   <td>
@@ -70,8 +69,6 @@ const AdminCustomers = () => {
             <div className="order-detail">
               <div className="order-detail-row"><span>Name</span><strong>{selected.first_name} {selected.last_name}</strong></div>
               <div className="order-detail-row"><span>Email</span><strong>{selected.email}</strong></div>
-              <div className="order-detail-row"><span>Phone</span><strong>{selected.phone || '-'}</strong></div>
-              <div className="order-detail-row"><span>City</span><strong>{selected.city || '-'}</strong></div>
               <div className="order-detail-row"><span>Joined</span><strong>{new Date(selected.date_joined).toLocaleDateString('en-IN')}</strong></div>
               <div className="order-detail-row"><span>Total Orders</span><strong>{selected.order_count || 0}</strong></div>
             </div>

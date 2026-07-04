@@ -223,9 +223,11 @@ img{display:block;max-width:100%;}
 .logo-small{height:36px;}
 .logo-main{font-size:16px;letter-spacing:1px;}
 
-/* Screen is too narrow for the tagline plus wordmark plus
-   image without crowding — drop the tagline, keep the wordmark. */
-.logo-sub{display:none;}
+/* Keep the tagline visible even on small phones, just shrunk
+   down enough that "FASHIONS" and its dashes fit comfortably
+   under the wordmark without crowding it. */
+.logo-sub{display:flex;font-size:6.5px;letter-spacing:1.5px;gap:3px;margin-top:3px;}
+.logo-sub::before,.logo-sub::after{width:6px;}
 
 /* 3 icons must fit inside the 85px left/right columns:
    28px × 3 + 0px gap = 84px. */

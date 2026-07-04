@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Heart, Star, ChevronLeft, ChevronRight, Minus, Plus } from 'lucide-react';
 import { productsAPI, wishlistAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -9,6 +9,7 @@ import './ProductDetailPage.css';
 
 const ProductDetailPage = () => {
   const { slug } = useParams();
+  const navigate = useNavigate();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(0);
@@ -85,6 +86,14 @@ const ProductDetailPage = () => {
   }, [selectedSize, selectedColor, product]);
 
   const handleAddToCart = () => {
+    // FIX: previously this added to cart directly with no login check,
+    // so logged-out users could add items and see the cart badge update
+    // without ever being asked to sign in.
+    if (!user) {
+      error('Please login to add items to your bag');
+      navigate('/login', { state: { from: `/products/${slug}` } });
+      return;
+    }
     // ✅ Require size selection if sizes exist
     if (sizes.length > 0 && !selectedSize) {
       error('Please select a size to continue');

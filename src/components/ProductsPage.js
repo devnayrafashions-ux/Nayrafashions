@@ -172,13 +172,19 @@ const ProductsPage = () => {
     : selectedBadge ? (badgeLabels[selectedBadge] || 'Collection')
     : 'All Products';
 
+  // FIX: only treat this as a "type mode" page (Jewellery / Hair
+  // Accessories) if the matched category's product_type is one we
+  // actually have a label for. Previously this picked up ANY
+  // product_type (e.g. a plain dress category), which caused
+  // "All undefined" to render and made the "All" option re-navigate
+  // to the same category instead of clearing filters.
+  const matchedType = categories.find(c => c.slug === selectedCategory)?.product_type;
+  const activeType = selectedType || (typeLabels[matchedType] ? matchedType : '') || '';
+
   // NEW: sidebar shows only sub-categories relevant to the current context.
   // On a type-level page (Jewellery, Hair Accessories) or when a specific
   // sub-category of that type is selected, narrow the list to that type.
   // On the general /products page, show everything as before.
-  const activeType = selectedType
-    || categories.find(c => c.slug === selectedCategory)?.product_type
-    || '';
   const sidebarCategories = activeType
     ? categories.filter(c => c.product_type === activeType)
     : categories;
@@ -230,11 +236,22 @@ const ProductsPage = () => {
                 type="radio"
                 name="cat"
                 checked={!selectedCategory}
-                onChange={() => activeType
-                  ? navigate(`/collections/${slug}`)
-                  : selectCategory('')}
+                onChange={() => {
+                  if (activeType) {
+                    // FIX: resolve the type-level slug (e.g. "jewellery")
+                    // rather than reusing `slug`, which may be a
+                    // sub-category slug (e.g. "earrings") when this is
+                    // clicked from within a sub-category page.
+                    const typeSlug = Object.keys(TYPE_SLUGS).find(k => TYPE_SLUGS[k] === activeType);
+                    navigate(`/collections/${typeSlug || slug}`);
+                  } else {
+                    selectCategory('');
+                  }
+                }}
               />
-              {activeType ? `All ${typeLabels[activeType]}` : 'All Categories'}
+              {/* FIX: guard against undefined label so this never renders
+                  "All undefined" for a non-type category. */}
+              {activeType ? `All ${typeLabels[activeType] || ''}`.trim() : 'All Categories'}
             </label>
             {sidebarCategories.map(cat => (
               <label key={cat.slug} className="filter-option">

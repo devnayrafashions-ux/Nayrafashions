@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Trash2, Plus, Minus, ShoppingBag } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import './CartPage.css';
 
 // Single source of truth for the free-shipping threshold on this page.
@@ -13,13 +14,20 @@ const FREE_SHIPPING_THRESHOLD = 2999;
 const CartPage = () => {
   const { cart, cartTotal, cartCount, removeFromCart, updateQuantity } = useCart();
   const { user } = useAuth();
+  const { info } = useToast();
   const navigate = useNavigate();
 
   const shipping = cartTotal >= FREE_SHIPPING_THRESHOLD || cartTotal === 0 ? 0 : 99;
   const grandTotal = cartTotal + shipping;
 
   const handleCheckout = () => {
-    if (!user) { navigate('/login'); return; }
+    if (!user) {
+      info('Please login to continue to checkout');
+      // Pass the intended destination so the login page can send them
+      // straight to checkout after they sign in, instead of home.
+      navigate('/login', { state: { from: '/checkout' } });
+      return;
+    }
     navigate('/checkout');
   };
 

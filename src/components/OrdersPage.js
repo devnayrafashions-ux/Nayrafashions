@@ -225,11 +225,21 @@ const OrdersPage = () => {
           </Link>
         </div>
       ) : (
-        <div className="orders-list">
-          {orders.map(order => (
-            <OrderCard key={order.id} order={order} />
-          ))}
-        </div>
+        <>
+          <div className="orders-list">
+            {orders.map(order => (
+              <OrderCard key={order.id} order={order} />
+            ))}
+          </div>
+
+          <div className="orders-continue-shopping">
+            <Link to="/products">
+              <button className="btn-gold">
+                CONTINUE SHOPPING <ArrowRight size={14} style={{ marginLeft: 6, verticalAlign: -2 }} />
+              </button>
+            </Link>
+          </div>
+        </>
       )}
     </div>
   );

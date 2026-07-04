@@ -12,13 +12,33 @@
 .hero-bg {
   position: absolute;
   inset: 0;
+  /* Fallback color shows through until the first slide's image loads */
   background: radial-gradient(ellipse at 60% 50%, #9b2020 0%, #5a1313 40%, #3a0b0b 100%);
+}
+
+.hero-bg-slide {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center 20%;
+  background-repeat: no-repeat;
+  opacity: 0;
+  transition: opacity 1.2s ease;
+}
+
+.hero-bg-slide.active {
+  opacity: 1;
 }
 
 .hero-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to bottom, rgba(90,19,19,0.3) 0%, rgba(58,11,11,0.6) 100%);
+  background: linear-gradient(
+    to bottom,
+    rgba(58, 11, 11, 0.25) 0%,
+    rgba(58, 11, 11, 0.4) 55%,
+    rgba(31, 6, 6, 0.65) 100%
+  );
 }
 
 .hero-content {

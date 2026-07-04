@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Package, ChevronDown, ChevronUp, ShoppingBag, ArrowRight } from 'lucide-react';
 import { ordersAPI } from '../services/api';
-import { useAuth } from '../context/AuthContext';
 import './OrdersPage.css';
 
 const STATUS_CONFIG = {
@@ -85,9 +84,12 @@ const OrderCard = ({ order }) => {
             {(order.items || order.order_items || []).map((item, idx) => (
               <div key={idx} className="order-item-row">
                 <div className="order-item-img">
-                  {item.product_image || item.product?.primary_image ? (
+                  {/* FIX: OrderItemSerializer returns the image as a flat
+                      `primary_image` field on the item itself (not nested
+                      under `product`) — check that first. */}
+                  {item.primary_image || item.product_image || item.product?.primary_image ? (
                     <img
-                      src={item.product_image || item.product?.primary_image}
+                      src={item.primary_image || item.product_image || item.product?.primary_image}
                       alt={item.product_name || item.product?.name}
                     />
                   ) : (
@@ -98,6 +100,9 @@ const OrderCard = ({ order }) => {
                 </div>
                 <div className="order-item-info">
                   <p className="order-item-name">{item.product_name || item.product?.name}</p>
+                  {/* Only ever renders for dresses — size/selected_size are
+                      empty strings for jewelry & hair accessories, since
+                      checkout now sends size: '' for those item types */}
                   {(item.size || item.selected_size) && (
                     <p className="order-item-meta">Size: {item.size || item.selected_size}</p>
                   )}
@@ -126,6 +131,16 @@ const OrderCard = ({ order }) => {
                   </p>
                 </>
               )}
+              {!order.shipping_address && order.full_name && (
+                <>
+                  <p className="footer-label">Delivered to</p>
+                  <p className="footer-value">
+                    {order.full_name}, {order.address_line1}
+                    {order.address_line2 ? `, ${order.address_line2}` : ''},&nbsp;
+                    {order.city} — {order.pincode}
+                  </p>
+                </>
+              )}
             </div>
             <div className="order-totals">
               <div className="totals-row">
@@ -134,7 +149,11 @@ const OrderCard = ({ order }) => {
               </div>
               <div className="totals-row">
                 <span>Shipping</span>
-                <span className="free-tag">FREE</span>
+                <span className={Number(order.shipping_charge) === 0 ? 'free-tag' : ''}>
+                  {Number(order.shipping_charge) === 0
+                    ? 'FREE'
+                    : `₹${Number(order.shipping_charge || 0).toLocaleString()}`}
+                </span>
               </div>
               <div className="totals-row grand">
                 <span>Total</span>
@@ -152,7 +171,6 @@ const OrdersPage = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { user } = useAuth();
 
   useEffect(() => {
     ordersAPI.getMyOrders()

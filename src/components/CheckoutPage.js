@@ -87,8 +87,18 @@ const CheckoutPage = () => {
                 product_name: item.product.name,
                 product_price: item.product.price,
                 quantity: item.quantity,
-                size: item.variant?.size || '',
+                // FIX: size was previously read from item.variant?.size, but
+                // CartContext never populates `variant` for size selection —
+                // it stores the chosen size as item.selectedSize /
+                // item.product.selectedSize. This was silently saving an
+                // empty size on every dress order regardless of what the
+                // customer picked.
+                size: item.selectedSize || item.product?.selectedSize || item.variant?.size || '',
                 color: item.variant?.color || '',
+                // Snapshot the type so My Orders / Admin Orders can always
+                // tell dress vs jewelry vs hair accessory apart, even if the
+                // product or its category is edited/deleted afterward.
+                product_type: item.product?.product_type || '',
               })),
             };
 
@@ -292,30 +302,35 @@ const CheckoutPage = () => {
 
               <h2 className="section-heading" style={{ marginTop: 32 }}>Order Items</h2>
               <div className="review-items">
-                {cart.map(item => (
-                  <div key={item.key} className="review-item">
-                    <img
-                      src={
-                        item.product.primary_image ||
-                        'https://images.unsplash.com/photo-1583391733956-6c78276477e2?w=100&q=80'
-                      }
-                      alt={item.product.name}
-                    />
-                    <div className="review-item-info">
-                      <p className="review-item-name">{item.product.name}</p>
-                      {item.variant && (
-                        <p className="review-item-variant">
-                          {item.variant.size && `Size: ${item.variant.size}`}
-                          {item.variant.color && ` · Color: ${item.variant.color}`}
-                        </p>
-                      )}
-                      <p className="review-item-qty">Qty: {item.quantity}</p>
+                {cart.map(item => {
+                  const size = item.selectedSize || item.product?.selectedSize || item.variant?.size || '';
+                  return (
+                    <div key={item.key} className="review-item">
+                      <img
+                        src={
+                          item.product.primary_image ||
+                          'https://images.unsplash.com/photo-1583391733956-6c78276477e2?w=100&q=80'
+                        }
+                        alt={item.product.name}
+                      />
+                      <div className="review-item-info">
+                        <p className="review-item-name">{item.product.name}</p>
+                        {/* Only ever renders for dresses — size/variant.color are
+                            empty for jewelry & hair accessories */}
+                        {(size || item.variant?.color) && (
+                          <p className="review-item-variant">
+                            {size && `Size: ${size}`}
+                            {item.variant?.color && ` · Color: ${item.variant.color}`}
+                          </p>
+                        )}
+                        <p className="review-item-qty">Qty: {item.quantity}</p>
+                      </div>
+                      <p className="review-item-price">
+                        ₹{(Number(item.product.price) * item.quantity).toLocaleString()}
+                      </p>
                     </div>
-                    <p className="review-item-price">
-                      ₹{(Number(item.product.price) * item.quantity).toLocaleString()}
-                    </p>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               <button

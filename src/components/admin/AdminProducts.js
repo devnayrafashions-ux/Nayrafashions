@@ -1,11 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Plus, Edit2, Trash2, ToggleLeft, ToggleRight, Search } from 'lucide-react';
 import { adminAPI, categoriesAPI } from '../../services/api';
 import { useToast } from '../../context/ToastContext';
 
 const ALL_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'Free Size'];
 
+const PRODUCT_TYPES = [
+  { value: 'dress', label: 'Dress' },
+  { value: 'jewelry', label: 'Jewelry' },
+  { value: 'hair_accessory', label: 'Hair Accessory' },
+];
+
+const typeLabel = (value) =>
+  PRODUCT_TYPES.find((t) => t.value === value)?.label || value || '-';
+
 const emptyForm = {
+  // NEW: drives which categories are selectable and whether sizes show.
+  // Not sent to the backend directly — the backend derives product_type
+  // from the chosen category, this is purely a frontend filter/UI switch.
+  product_type: 'dress',
   name: '', description: '', price: '', original_price: '',
   category: '', badge: '', stock: '', is_active: true,
   sizes: [],
@@ -20,17 +33,19 @@ const AdminProducts = () => {
   const [form, setForm] = useState(emptyForm);
   const [imageFile, setImageFile] = useState(null);
   const [search, setSearch] = useState('');
+  // Filter the product table itself by type
+  const [typeFilter, setTypeFilter] = useState('all');
   const { success, error } = useToast();
 
-  const fetchProducts = () => {
+  const fetchProducts = useCallback(() => {
     setLoading(true);
     adminAPI.getProducts({ search, page_size: 50 })
       .then(d => setProducts(Array.isArray(d) ? d : d.results || []))
       .catch(() => setProducts([]))
       .finally(() => setLoading(false));
-  };
+  }, [search]);
 
-  useEffect(() => { fetchProducts(); }, [search]);
+  useEffect(() => { fetchProducts(); }, [fetchProducts]);
   useEffect(() => {
     categoriesAPI.getAll()
       .then(d => setCategories(Array.isArray(d) ? d : d.results || []))
@@ -45,12 +60,16 @@ const AdminProducts = () => {
   };
 
   const openEdit = (p) => {
+    const catId = p.category?.id || p.category || '';
+    const matchedCat = categories.find(c => String(c.id) === String(catId));
+    const inferredType = p.product_type || matchedCat?.product_type || 'dress';
     setForm({
+      product_type: inferredType,
       name: p.name,
       description: p.description || '',
       price: p.price,
       original_price: p.original_price || '',
-      category: p.category?.id || p.category || '',  // ← extract ID from object
+      category: catId,
       badge: p.badge || '',
       stock: p.stock || '',
       is_active: p.is_active,
@@ -59,6 +78,18 @@ const AdminProducts = () => {
     setEditProduct(p);
     setImageFile(null);
     setShowModal(true);
+  };
+
+  // When the admin switches product type, the previously selected category
+  // almost certainly belongs to the wrong type now — clear it so they can't
+  // accidentally save a Jewelry product under a Dress category.
+  const changeProductType = (nextType) => {
+    setForm(prev => ({
+      ...prev,
+      product_type: nextType,
+      category: '',
+      sizes: nextType === 'dress' ? prev.sizes : [],
+    }));
   };
 
   const toggleSize = (size) => {
@@ -76,21 +107,24 @@ const AdminProducts = () => {
     const fd = new FormData();
 
     Object.entries(form).forEach(([k, v]) => {
-      if (k === 'sizes') return; // handle separately
-      if (k === 'is_active') { fd.append(k, v ? 'true' : 'false'); return; } // ← fix boolean
+      if (k === 'sizes' || k === 'product_type') return; // handled separately / not a backend field
+      if (k === 'is_active') { fd.append(k, v ? 'true' : 'false'); return; }
       if (v !== '') fd.append(k, v);
     });
 
-    fd.append('sizes', JSON.stringify(form.sizes));
+    // Sizes only make sense for dresses — always send an empty list otherwise,
+    // even if stale values are lingering in local state.
+    const sizesToSend = form.product_type === 'dress' ? form.sizes : [];
+    fd.append('sizes', JSON.stringify(sizesToSend));
 
     if (imageFile) fd.append('image', imageFile);
 
     try {
       if (editProduct) {
-  await adminAPI.updateProduct(editProduct.id, fd);
-} else {
-  await adminAPI.createProduct(fd);
-}
+        await adminAPI.updateProduct(editProduct.id, fd);
+      } else {
+        await adminAPI.createProduct(fd);
+      }
       setShowModal(false);
       fetchProducts();
     } catch (err) {
@@ -118,6 +152,12 @@ const AdminProducts = () => {
     }
   };
 
+  const categoriesForType = categories.filter(c => c.product_type === form.product_type);
+
+  const visibleProducts = typeFilter === 'all'
+    ? products
+    : products.filter(p => p.product_type === typeFilter);
+
   return (
     <div className="admin-page">
       <div className="admin-page-header">
@@ -128,6 +168,18 @@ const AdminProducts = () => {
         <button className="admin-btn-primary" onClick={openAdd}>
           <Plus size={16} /> Add Product
         </button>
+      </div>
+
+      <div className="admin-tabs" style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+        {[{ value: 'all', label: 'All' }, ...PRODUCT_TYPES].map(t => (
+          <button
+            key={t.value}
+            onClick={() => setTypeFilter(t.value)}
+            className={typeFilter === t.value ? 'admin-btn-primary' : 'admin-btn-secondary'}
+          >
+            {t.label}
+          </button>
+        ))}
       </div>
 
       <div className="admin-card">
@@ -147,6 +199,7 @@ const AdminProducts = () => {
             <thead>
               <tr>
                 <th>Product</th>
+                <th>Type</th>
                 <th>Category</th>
                 <th>Price</th>
                 <th>Stock</th>
@@ -157,7 +210,7 @@ const AdminProducts = () => {
               </tr>
             </thead>
             <tbody>
-              {products.map(p => (
+              {visibleProducts.map(p => (
                 <tr key={p.id}>
                   <td>
                     <div className="product-cell">
@@ -168,11 +221,12 @@ const AdminProducts = () => {
                       <span>{p.name}</span>
                     </div>
                   </td>
+                  <td>{typeLabel(p.product_type)}</td>
                   <td>{p.category_name || '-'}</td>
                   <td>₹{Number(p.price).toLocaleString()}</td>
                   <td>{p.stock || '-'}</td>
                   <td>
-                    {Array.isArray(p.sizes) && p.sizes.length > 0
+                    {p.product_type === 'dress' && Array.isArray(p.sizes) && p.sizes.length > 0
                       ? p.sizes.join(', ')
                       : '-'}
                   </td>
@@ -206,6 +260,19 @@ const AdminProducts = () => {
             </div>
             <form className="admin-form" onSubmit={handleSubmit}>
 
+              <div className="admin-form-group">
+                <label>Product Type *</label>
+                <select
+                  required
+                  value={form.product_type}
+                  onChange={e => changeProductType(e.target.value)}
+                >
+                  {PRODUCT_TYPES.map(t => (
+                    <option key={t.value} value={t.value}>{t.label}</option>
+                  ))}
+                </select>
+              </div>
+
               <div className="form-row-2">
                 <div className="admin-form-group">
                   <label>Product Name *</label>
@@ -223,10 +290,15 @@ const AdminProducts = () => {
                     onChange={e => setForm(p => ({ ...p, category: e.target.value }))}
                   >
                     <option value="">Select category</option>
-                    {categories.map(c => (
+                    {categoriesForType.map(c => (
                       <option key={c.id} value={c.id}>{c.name}</option>
                     ))}
                   </select>
+                  {categoriesForType.length === 0 && (
+                    <p style={{ fontSize: '12px', color: '#999', marginTop: '4px' }}>
+                      No {typeLabel(form.product_type)} categories yet — add one under Categories first.
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -286,39 +358,43 @@ const AdminProducts = () => {
                 </div>
               </div>
 
-              <div className="admin-form-group">
-                <label>Available Sizes</label>
-                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '6px' }}>
-                  {ALL_SIZES.map(size => {
-                    const selected = (form.sizes || []).includes(size);
-                    return (
-                      <button
-                        key={size}
-                        type="button"
-                        onClick={() => toggleSize(size)}
-                        style={{
-                          padding: '6px 14px',
-                          borderRadius: '4px',
-                          border: `1.5px solid ${selected ? '#7B1B1B' : '#ccc'}`,
-                          background: selected ? '#7B1B1B' : '#fff',
-                          color: selected ? '#fff' : '#444',
-                          fontWeight: selected ? '600' : '400',
-                          cursor: 'pointer',
-                          fontSize: '13px',
-                          transition: 'all 0.15s ease',
-                        }}
-                      >
-                        {size}
-                      </button>
-                    );
-                  })}
+              {/* Sizes only apply to dresses — hidden entirely for
+                  jewelry / hair accessories rather than shown-but-irrelevant */}
+              {form.product_type === 'dress' && (
+                <div className="admin-form-group">
+                  <label>Available Sizes</label>
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '6px' }}>
+                    {ALL_SIZES.map(size => {
+                      const selected = (form.sizes || []).includes(size);
+                      return (
+                        <button
+                          key={size}
+                          type="button"
+                          onClick={() => toggleSize(size)}
+                          style={{
+                            padding: '6px 14px',
+                            borderRadius: '4px',
+                            border: `1.5px solid ${selected ? '#7B1B1B' : '#ccc'}`,
+                            background: selected ? '#7B1B1B' : '#fff',
+                            color: selected ? '#fff' : '#444',
+                            fontWeight: selected ? '600' : '400',
+                            cursor: 'pointer',
+                            fontSize: '13px',
+                            transition: 'all 0.15s ease',
+                          }}
+                        >
+                          {size}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {form.sizes.length === 0 && (
+                    <p style={{ fontSize: '12px', color: '#999', marginTop: '4px' }}>
+                      No sizes selected — all sizes available by default
+                    </p>
+                  )}
                 </div>
-                {form.sizes.length === 0 && (
-                  <p style={{ fontSize: '12px', color: '#999', marginTop: '4px' }}>
-                    No sizes selected — all sizes available by default
-                  </p>
-                )}
-              </div>
+              )}
 
               <div className="admin-form-group">
                 <label>Product Image</label>

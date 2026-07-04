@@ -8,6 +8,7 @@ import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import Collections from './components/Collections';
 import NewArrivals from './components/NewArrivals';
+import AccessoriesSlider from './components/AccessoriesSlider';
 import OurStory from './components/OurStory';
 import Footer from './components/Footer';
 import LoginPage from './components/LoginPage';
@@ -18,6 +19,7 @@ import ProductDetailPage from './components/ProductDetailPage';
 import ProductsPage from './components/ProductsPage';
 import WishlistPage from './components/WishlistPage';
 import OrdersPage from './components/OrdersPage';
+import ScrollToTop from './components/ScrollToTop';
 
 // Admin
 import AdminLayout from './components/admin/AdminLayout';
@@ -32,6 +34,7 @@ const HomePage = () => (
     <Hero />
     <Collections />
     <NewArrivals />
+    <AccessoriesSlider />
     <OurStory />
     <Footer />
   </>
@@ -43,6 +46,7 @@ function App() {
       <AuthProvider>
         <CartProvider>
           <Router>
+            <ScrollToTop />
             <Routes>
               {/* Public routes with Navbar */}
               <Route path="/" element={<><Navbar /><HomePage /></>} />

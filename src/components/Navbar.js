@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import {
   Menu,
   X,
-  Search,
   User,
   Heart,
   ShoppingBag,
@@ -91,10 +90,6 @@ const Navbar = () => {
 
         <div className="nav-right">
 
-          <button className="nav-icon">
-            <Search size={18} />
-          </button>
-
           {user ? (
             <button
               className="nav-icon"
@@ -161,6 +156,20 @@ const Navbar = () => {
               onClick={() => setMenuOpen(false)}
             >
               Collections
+            </a>
+
+            <a
+              href="/collections/jewellery"
+              onClick={() => setMenuOpen(false)}
+            >
+              Jewellery
+            </a>
+
+            <a
+              href="/collections/hair-accessories"
+              onClick={() => setMenuOpen(false)}
+            >
+              Hair Accessories
             </a>
 
             <a

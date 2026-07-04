@@ -8,7 +8,23 @@
   margin-bottom: 56px;
 }
 
-.products-scroll-container {
+/* =========================
+   STATIC GRID (5 or fewer items)
+========================= */
+.arrivals-grid-static {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 24px;
+  width: 100%;
+  max-width: 1300px;
+  margin: 0 auto;
+}
+
+/* =========================
+   SLIDING TRACK (more than 5 items)
+========================= */
+.arrivals-scroll-container {
   width: 100%;
   max-width: 1300px;
   margin: 0 auto;
@@ -17,31 +33,31 @@
   mask-image: linear-gradient(90deg, transparent 0, #000 40px, #000 calc(100% - 40px), transparent 100%);
 }
 
-.products-grid {
+.arrivals-grid-slide {
   display: flex;
   flex-wrap: nowrap;
   gap: 24px;
   width: max-content;
-  animation: scrollLeft 28s linear infinite;
+  animation: arrivalsScrollLeft 28s linear infinite;
 }
 
-.products-scroll-container:hover .products-grid {
+.arrivals-scroll-container:hover .arrivals-grid-slide {
   animation-play-state: paused;
 }
 
-@keyframes scrollLeft {
+@keyframes arrivalsScrollLeft {
   from { transform: translateX(0); }
   to { transform: translateX(-50%); }
 }
 
-.product-card {
+.arrivals-card {
   width: 260px;
   flex-shrink: 0;
   flex-grow: 0;
   cursor: pointer;
 }
 
-.product-image-wrap {
+.arrivals-image-wrap {
   position: relative;
   overflow: hidden;
   aspect-ratio: 3/4;
@@ -49,18 +65,18 @@
   display: block;
 }
 
-.product-image {
+.arrivals-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
   transition: transform 0.5s ease;
 }
 
-.product-card:hover .product-image {
+.arrivals-card:hover .arrivals-image {
   transform: scale(1.04);
 }
 
-.product-badge {
+.arrivals-badge {
   position: absolute;
   top: 12px;
   left: 12px;
@@ -72,7 +88,7 @@
   z-index: 2;
 }
 
-.wishlist-btn {
+.arrivals-wishlist-btn {
   position: absolute;
   top: 12px;
   right: 12px;
@@ -89,48 +105,17 @@
   z-index: 2;
 }
 
-.wishlist-btn:hover, .wishlist-btn.active {
+.arrivals-wishlist-btn:hover, .arrivals-wishlist-btn.active {
   background: var(--white);
   transform: scale(1.1);
   color: var(--crimson);
 }
 
-.product-hover-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(0,0,0,0.2);
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  padding-bottom: 24px;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.product-card:hover .product-hover-overlay {
-  opacity: 1;
-}
-
-.quick-add {
-  background-color: var(--white);
-  color: var(--text-dark);
-  border: none;
-  padding: 10px 28px;
-  font-size: 10px;
-  letter-spacing: 2px;
-  font-weight: 600;
-  transition: background-color 0.2s;
-}
-
-.quick-add:hover {
-  background-color: var(--cream);
-}
-
-.product-info {
+.arrivals-info {
   padding: 14px 0;
 }
 
-.product-name {
+.arrivals-name {
   font-family: 'Cormorant Garamond', serif;
   font-size: 18px;
   font-weight: 500;
@@ -138,25 +123,25 @@
   margin-bottom: 6px;
 }
 
-.product-pricing {
+.arrivals-pricing {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-.price-current {
+.arrivals-price-current {
   font-size: 15px;
   font-weight: 600;
   color: var(--text-dark);
 }
 
-.price-original {
+.arrivals-price-original {
   font-size: 13px;
   color: var(--text-light);
   text-decoration: line-through;
 }
 
-.price-discount {
+.arrivals-price-discount {
   font-size: 11px;
   color: #2C5F2E;
   font-weight: 500;
@@ -184,14 +169,14 @@
   color: var(--white);
 }
 
-.product-sizes {
+.arrivals-sizes {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
   margin-top: 8px;
 }
 
-.product-size-chip {
+.arrivals-size-chip {
   font-size: 10px;
   padding: 2px 7px;
   border: 1px solid #ccc;
@@ -202,22 +187,22 @@
 }
 
 /* Skeleton loading */
-.skeleton .product-image-wrap.skeleton-img {
+.arrivals-card.skeleton .arrivals-image-wrap.arrivals-skeleton-img {
   background: linear-gradient(90deg, #e8e0d5 25%, #f0ebe1 50%, #e8e0d5 75%);
   background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
+  animation: arrivalsShimmer 1.5s infinite;
 }
-.skeleton-text {
+.arrivals-skeleton-text {
   height: 16px;
   background: linear-gradient(90deg, #e8e0d5 25%, #f0ebe1 50%, #e8e0d5 75%);
   background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
+  animation: arrivalsShimmer 1.5s infinite;
   margin: 10px 0;
   border-radius: 4px;
 }
-.skeleton-text.short { width: 60%; }
+.arrivals-skeleton-text.short { width: 60%; }
 
-@keyframes shimmer {
+@keyframes arrivalsShimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
 }
@@ -230,11 +215,12 @@
     padding: 60px 24px;
   }
 
-  .products-grid {
+  .arrivals-grid-static,
+  .arrivals-grid-slide {
     gap: 20px;
   }
 
-  .product-card {
+  .arrivals-card {
     width: 220px;
   }
 }
@@ -252,52 +238,61 @@
     margin-bottom: 28px;
   }
 
-  .products-grid {
+  .arrivals-grid-static {
+    gap: 16px;
+    justify-content: space-between;
+  }
+
+  .arrivals-grid-slide {
     gap: 16px;
     animation-duration: 22s;
   }
 
-  .product-card {
+  .arrivals-card {
     width: 170px;
   }
 
-  .product-name {
+  .arrivals-grid-static .arrivals-card {
+    width: calc(50% - 8px);
+  }
+
+  .arrivals-name {
     font-size: 15px;
     line-height: 1.3;
     min-height: 38px;
   }
 
-  .product-pricing {
+  .arrivals-pricing {
     flex-wrap: wrap;
     gap: 6px;
   }
 
-  .price-current {
+  .arrivals-price-current {
     font-size: 16px;
   }
 
-  .price-original {
+  .arrivals-price-original {
     font-size: 13px;
   }
 
-  .price-discount {
+  .arrivals-price-discount {
     font-size: 12px;
   }
 
-  .product-info {
+  .arrivals-info {
     padding-top: 10px;
   }
 
-  .product-sizes {
+  .arrivals-sizes {
     gap: 6px;
   }
 
-  .product-size-chip {
+  .arrivals-size-chip {
     font-size: 10px;
     padding: 4px 8px;
   }
 
-  .wishlist-btn {
+  .arrivals-wishlist-btn {
     width: 30px;
     height: 30px;
   }
@@ -308,32 +303,41 @@
 ========================= */
 @media (max-width: 480px) {
 
-  .products-grid {
+  .arrivals-grid-static,
+  .arrivals-grid-slide {
     gap: 14px;
+  }
+
+  .arrivals-grid-slide {
     animation-duration: 18s;
   }
 
-  .product-card {
+  .arrivals-card {
     width: 150px;
   }
 
-  .product-image-wrap {
+  .arrivals-grid-static .arrivals-card {
+    width: 100%;
+    max-width: 320px;
+  }
+
+  .arrivals-image-wrap {
     aspect-ratio: 3/4;
   }
 
-  .product-name {
+  .arrivals-name {
     font-size: 16px;
   }
 
-  .price-current {
+  .arrivals-price-current {
     font-size: 18px;
   }
 
-  .price-original {
+  .arrivals-price-original {
     font-size: 14px;
   }
 
-  .price-discount {
+  .arrivals-price-discount {
     font-size: 13px;
   }
 

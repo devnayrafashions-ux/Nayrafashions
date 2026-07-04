@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Search, Eye } from 'lucide-react';
 import { ordersAPI } from '../../services/api';
 import { useToast } from '../../context/ToastContext';
@@ -13,6 +13,35 @@ const statusColor = {
   refunded: '#6B7280',
 };
 
+// NEW: statuses that still need admin action — used to decide whether
+// the age badge should carry a warning color (see getAgeInfo below).
+const ACTIONABLE_STATUSES = ['pending', 'confirmed', 'processing'];
+
+// NEW: returns { label, color } for the "time since order" badge.
+// - Non-actionable orders (shipped/delivered/cancelled/refunded) always
+//   get a neutral gray badge, since there's nothing left to act on.
+// - Actionable orders escalate in color the longer they sit untouched:
+//   gray (< 2 days) → orange (2-4 days) → red (5+ days).
+const getAgeInfo = (dateStr, status) => {
+  const created = new Date(dateStr);
+  const now = new Date();
+  const diffMs = now - created;
+  const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  let label;
+  if (days <= 0) label = 'Today';
+  else if (days === 1) label = '1 day ago';
+  else label = `${days} days ago`;
+
+  let color = '#6B7280'; // neutral gray default
+  if (ACTIONABLE_STATUSES.includes(status)) {
+    if (days >= 5) color = '#B91C1C';       // red — needs urgent attention
+    else if (days >= 2) color = '#C2660A';  // orange — getting stale
+  }
+
+  return { label, color };
+};
+
 const AdminOrders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -21,7 +50,7 @@ const AdminOrders = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const { success, error } = useToast();
 
-  const fetchOrders = () => {
+  const fetchOrders = useCallback(() => {
     setLoading(true);
     const params = {};
     if (search) params.search = search;
@@ -30,9 +59,9 @@ const AdminOrders = () => {
       .then(d => setOrders(Array.isArray(d) ? d : d.results || []))
       .catch(() => setOrders([]))
       .finally(() => setLoading(false));
-  };
+  }, [search, statusFilter]);
 
-  useEffect(() => { fetchOrders(); }, [search, statusFilter]);
+  useEffect(() => { fetchOrders(); }, [fetchOrders]);
 
   const handleStatusChange = async (orderId, newStatus) => {
     try {
@@ -88,14 +117,30 @@ const AdminOrders = () => {
               </tr>
             </thead>
             <tbody>
-              {orders.map(order => (
+              {orders.map(order => {
+                // NEW: compute the age badge once per row
+                const { label: ageLabel, color: ageColor } = getAgeInfo(order.created_at, order.status);
+                return (
                 <tr key={order.id}>
                   <td>#{order.id}</td>
                   {/* ✅ fixed: was order.user_name */}
                   <td>{order.customer_name || order.full_name || '—'}</td>
                   {/* ✅ city now shown */}
                   <td>{order.city || '—'}</td>
-                  <td>{new Date(order.created_at).toLocaleDateString('en-IN')}</td>
+                  <td>
+                    {new Date(order.created_at).toLocaleDateString('en-IN')}
+                    {/* NEW: age badge under the date */}
+                    <div
+                      style={{
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        color: ageColor,
+                        marginTop: '2px',
+                      }}
+                    >
+                      {ageLabel}
+                    </div>
+                  </td>
                   {/* ✅ fixed: was order.total_amount */}
                   <td>₹{Number(order.total || 0).toLocaleString()}</td>
                   <td>
@@ -116,7 +161,12 @@ const AdminOrders = () => {
   className="action-btn edit"
   onClick={async () => {
     try {
-      const full = await ordersAPI.getOrder(order.id);
+      // FIX: use the admin-scoped endpoint (/admin/orders/<id>/),
+      // which is unfiltered by user. The previous ordersAPI.getOrder()
+      // call hit the customer-facing /orders/<id>/ route, which is
+      // filtered to request.user's own orders and 404s whenever the
+      // logged-in admin views an order placed by a different customer.
+      const full = await ordersAPI.getOrderAdmin(order.id);
       setSelectedOrder(full);
     } catch {
       error('Failed to load order details');
@@ -127,7 +177,8 @@ const AdminOrders = () => {
 </button>
                   </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         )}
@@ -206,8 +257,26 @@ const AdminOrders = () => {
   <>
     <h4 style={{ marginTop: 16, marginBottom: 8 }}>Items</h4>
     {(selectedOrder.items || selectedOrder.order_items || []).map((item, i) => (
-      <div key={i} className="order-item-row">
-        <div>
+      <div key={i} className="order-item-row" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        {/* NEW: product image — falls back to a placeholder box if no image was saved */}
+        {item.primary_image ? (
+          <img
+            src={item.primary_image}
+            alt={item.product_name}
+            style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 6, flexShrink: 0 }}
+          />
+        ) : (
+          <div
+            style={{
+              width: 48, height: 48, borderRadius: 6, flexShrink: 0,
+              background: '#F1EDE6', display: 'flex', alignItems: 'center',
+              justifyContent: 'center', fontSize: 10, color: '#9C9587',
+            }}
+          >
+            No image
+          </div>
+        )}
+        <div style={{ flex: 1 }}>
           <strong>{item.product_name}</strong>
           <div>Size: {item.size || 'N/A'}</div>
           <div>Qty: ×{item.quantity}</div>

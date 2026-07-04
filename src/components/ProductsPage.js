@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useSearchParams, useParams, Link } from 'react-router-dom';
+import { useSearchParams, useParams, useNavigate, Link } from 'react-router-dom';
 import { Heart, SlidersHorizontal, X, ChevronDown } from 'lucide-react';
 import { productsAPI, categoriesAPI, wishlistAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -44,6 +44,8 @@ const ProductCard = ({ product, wishlist, onWishlist, onAddCart }) => (
           <span className="pc-discount">{product.discount_percent}% off</span>
         )}
       </div>
+      {/* Sizes only ever apply to dresses — for jewelry/hair accessories
+          product.sizes will be an empty list, so this simply won't render */}
       {Array.isArray(product.sizes) && product.sizes.length > 0 && (
         <div className="pc-sizes">
           {product.sizes.map(size => (
@@ -58,6 +60,7 @@ const ProductCard = ({ product, wishlist, onWishlist, onAddCart }) => (
 const ProductsPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { slug } = useParams();
+  const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -69,10 +72,18 @@ const ProductsPage = () => {
   const { success, error } = useToast();
 
   const BADGE_SLUGS = { 'new-arrivals': 'new', 'bestsellers': 'bestseller', 'on-sale': 'sale' };
-  const slugIsBadge = slug && BADGE_SLUGS[slug];
 
-  const selectedCategory = slugIsBadge ? '' : (slug || searchParams.get('category') || '');
+  // NEW: same pattern as BADGE_SLUGS. These slugs are type-level landing
+  // pages (all Jewellery, all Hair Accessories) rather than a specific
+  // sub-category — they map to Category.product_type, not Category.slug.
+  const TYPE_SLUGS = { 'jewellery': 'jewelry', 'hair-accessories': 'hair_accessory' };
+
+  const slugIsBadge = slug && BADGE_SLUGS[slug];
+  const slugIsType = slug && TYPE_SLUGS[slug];
+
+  const selectedCategory = (slugIsBadge || slugIsType) ? '' : (slug || searchParams.get('category') || '');
   const selectedBadge = slugIsBadge ? BADGE_SLUGS[slug] : (searchParams.get('badge') || '');
+  const selectedType = slugIsType ? TYPE_SLUGS[slug] : '';
   const currentPage = parseInt(searchParams.get('page') || '1');
   const sortBy = searchParams.get('sort') || '-created_at';
   const searchQuery = searchParams.get('search') || '';
@@ -83,6 +94,7 @@ const ProductsPage = () => {
     try {
       const params = { page: currentPage, ordering: sortBy };
       if (selectedCategory) params['category__slug'] = selectedCategory;
+      if (selectedType) params['category__product_type'] = selectedType;
       if (selectedBadge) params.badge = selectedBadge;
       if (searchQuery) params.search = searchQuery;
       if (isFeatured) params.is_featured = true;
@@ -91,7 +103,7 @@ const ProductsPage = () => {
       setTotalCount(data.count || 0);
     } catch { setProducts([]); }
     finally { setLoading(false); }
-  }, [currentPage, selectedCategory, selectedBadge, sortBy, searchQuery, isFeatured]);
+  }, [currentPage, selectedCategory, selectedType, selectedBadge, sortBy, searchQuery, isFeatured]);
 
   useEffect(() => { fetchProducts(); }, [fetchProducts]);
 
@@ -119,6 +131,18 @@ const ProductsPage = () => {
     setSearchParams(next);
   };
 
+  const selectCategory = (catSlug) => {
+    const next = new URLSearchParams(searchParams);
+    next.delete('category');
+    next.delete('page');
+    const qs = next.toString();
+    if (catSlug) {
+      navigate(`/collections/${catSlug}${qs ? `?${qs}` : ''}`);
+    } else {
+      navigate(`/products${qs ? `?${qs}` : ''}`);
+    }
+  };
+
   const toggleWishlist = async (productId) => {
     if (!user) { window.location.href = '/login'; return; }
     try {
@@ -139,11 +163,25 @@ const ProductsPage = () => {
   const totalPages = Math.ceil(totalCount / 12);
 
   const badgeLabels = { new: 'New Arrivals', bestseller: 'Bestsellers', sale: 'On Sale' };
+  const typeLabels = { jewelry: 'Jewellery', hair_accessory: 'Hair Accessories' };
   const pageTitle = selectedCategory
     ? categories.find(c => c.slug === selectedCategory)?.name || 'Collection'
+    : selectedType
+    ? typeLabels[selectedType]
     : isFeatured ? 'Featured'
     : selectedBadge ? (badgeLabels[selectedBadge] || 'Collection')
     : 'All Products';
+
+  // NEW: sidebar shows only sub-categories relevant to the current context.
+  // On a type-level page (Jewellery, Hair Accessories) or when a specific
+  // sub-category of that type is selected, narrow the list to that type.
+  // On the general /products page, show everything as before.
+  const activeType = selectedType
+    || categories.find(c => c.slug === selectedCategory)?.product_type
+    || '';
+  const sidebarCategories = activeType
+    ? categories.filter(c => c.product_type === activeType)
+    : categories;
 
   return (
     <div className="page-wrapper products-page">
@@ -184,14 +222,23 @@ const ProductsPage = () => {
       <div className="products-layout">
         <aside className={`filters-sidebar ${filtersOpen ? 'open' : ''}`}>
           <div className="filter-section">
-            <h4 className="filter-heading">CATEGORY</h4>
+            <h4 className="filter-heading">
+              {activeType ? typeLabels[activeType] || 'CATEGORY' : 'CATEGORY'}
+            </h4>
             <label className="filter-option">
-              <input type="radio" name="cat" checked={!selectedCategory} onChange={() => setParam('category', '')} />
-              All Categories
+              <input
+                type="radio"
+                name="cat"
+                checked={!selectedCategory}
+                onChange={() => activeType
+                  ? navigate(`/collections/${slug}`)
+                  : selectCategory('')}
+              />
+              {activeType ? `All ${typeLabels[activeType]}` : 'All Categories'}
             </label>
-            {categories.map(cat => (
+            {sidebarCategories.map(cat => (
               <label key={cat.slug} className="filter-option">
-                <input type="radio" name="cat" checked={selectedCategory === cat.slug} onChange={() => setParam('category', cat.slug)} />
+                <input type="radio" name="cat" checked={selectedCategory === cat.slug} onChange={() => selectCategory(cat.slug)} />
                 {cat.name} <span>({cat.product_count})</span>
               </label>
             ))}
@@ -211,7 +258,7 @@ const ProductsPage = () => {
             ))}
           </div>
           {(selectedCategory || selectedBadge || searchQuery) && (
-            <button className="clear-filters" onClick={() => setSearchParams({})}>
+            <button className="clear-filters" onClick={() => navigate('/products')}>
               CLEAR ALL FILTERS
             </button>
           )}
@@ -234,7 +281,7 @@ const ProductsPage = () => {
             <div className="empty-state">
               <h3>No products found</h3>
               <p>Try adjusting your filters or search query</p>
-              <button className="btn-gold" onClick={() => setSearchParams({})}>VIEW ALL</button>
+              <button className="btn-gold" onClick={() => navigate('/products')}>VIEW ALL</button>
             </div>
           ) : (
             <div className="products-grid">

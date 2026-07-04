@@ -464,3 +464,180 @@ a:focus {
   color:var(--primary);
 
 }
+
+/* ==========================================
+   RESPONSIVE — TABLET (≤ 1024px)
+========================================== */
+
+@media (max-width: 1024px){
+
+  .navbar{
+    grid-template-columns: 60px 1fr 160px;
+    padding: 8px 28px;
+  }
+
+  .navbar.scrolled{
+    padding: 5px 28px;
+  }
+
+  .logo{
+    transform: translateX(20px);
+  }
+
+  .logo:hover{
+    transform: translateX(20px) scale(1.02);
+  }
+
+  .logo-img{
+    height: 68px;
+  }
+
+  .logo-small{
+    height: 56px;
+  }
+
+  .logo-main{
+    font-size: 28px;
+    letter-spacing: 3px;
+  }
+
+  .logo-sub{
+    font-size: 9px;
+    letter-spacing: 4px;
+  }
+
+  .announcement-bar{
+    font-size: 12px;
+    gap: 10px;
+    padding: 9px 16px;
+  }
+}
+
+/* ==========================================
+   RESPONSIVE — MOBILE (≤ 640px)
+========================================== */
+
+@media (max-width: 640px){
+
+  .navbar{
+    grid-template-columns: 44px 1fr 110px;
+    padding: 6px 16px;
+  }
+
+  .navbar.scrolled{
+    padding: 4px 16px;
+  }
+
+  .menu-btn{
+    width: 36px;
+    height: 36px;
+  }
+
+  .logo{
+    transform: translateX(8px);
+  }
+
+  .logo:hover{
+    transform: translateX(8px) scale(1.02);
+  }
+
+  .logo-img{
+    height: 48px;
+    margin-right: -10px;
+  }
+
+  .logo-small{
+    height: 40px;
+  }
+
+  .logo-main{
+    font-size: 20px;
+    letter-spacing: 2px;
+  }
+
+  /* Tagline under the logo gets cramped fastest on small screens —
+     hide it and keep just the wordmark. */
+  .logo-sub{
+    display: none;
+  }
+
+  .nav-right{
+    gap: 2px;
+  }
+
+  .nav-icon{
+    width: 34px;
+    height: 34px;
+  }
+
+  .nav-icon svg{
+    width: 19px;
+    height: 19px;
+  }
+
+  .badge{
+    width: 15px;
+    height: 15px;
+    font-size: 9px;
+  }
+
+  /* Announcement bar: two lines stack instead of squeezing onto one
+     and overflowing on narrow phones. */
+  .announcement-bar{
+    flex-wrap: wrap;
+    row-gap: 4px;
+    font-size: 11px;
+    letter-spacing: 1px;
+    padding: 8px 12px;
+    min-height: auto;
+  }
+
+  .divider{
+    display: none;
+  }
+
+  .mobile-menu{
+    padding: 16px 20px;
+    font-size: 15px;
+    gap: 18px;
+  }
+}
+
+/* ==========================================
+   RESPONSIVE — SMALL PHONE (≤ 380px)
+========================================== */
+
+@media (max-width: 380px){
+
+  .navbar{
+    grid-template-columns: 40px 1fr 90px;
+    padding: 6px 10px;
+  }
+
+  .logo{
+    transform: translateX(2px);
+  }
+
+  .logo:hover{
+    transform: translateX(2px) scale(1.02);
+  }
+
+  .logo-img{
+    height: 40px;
+  }
+
+  .logo-main{
+    font-size: 17px;
+    letter-spacing: 1px;
+  }
+
+  .nav-icon{
+    width: 30px;
+    height: 30px;
+  }
+
+  .nav-icon svg{
+    width: 17px;
+    height: 17px;
+  }
+}

@@ -298,7 +298,7 @@ const ProductDetailPage = () => {
           </div>
 
           <div className="pd-meta">
-            <p>Free shipping on orders above ₹999</p>
+            <p>Free shipping on orders above ₹2999</p>
           </div>
         </div>
       </div>

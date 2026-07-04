@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import './Footer.css';
 
 const features = [
-  { icon: <Truck size={20} />, title: 'FREE SHIPPING', sub: 'On orders above ₹999' },
+  { icon: <Truck size={20} />, title: 'FREE SHIPPING', sub: 'On orders above ₹2999' },
   { icon: <Heart size={20} />, title: 'HANDCRAFTED', sub: 'Made with love & care' },
   { icon: <Shield size={20} />, title: 'SECURE PAYMENT', sub: '100% safe checkout' },
 ];

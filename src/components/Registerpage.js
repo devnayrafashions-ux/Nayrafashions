@@ -251,7 +251,7 @@ const RegisterPage = () => {
           <button type="submit" className="btn-gold auth-btn" disabled={loading}>
             {loading ? (
               <span className="btn-loading">
-                <span className="spinner" />
+                <span className="spinner-btn" />
                 CREATING ACCOUNT...
               </span>
             ) : 'CREATE ACCOUNT'}

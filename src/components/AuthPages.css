@@ -207,7 +207,15 @@ input:disabled {
   gap: 10px;
 }
 
-.spinner {
+/* IMPORTANT: this is deliberately written as ".btn-loading .spinner-btn"
+   (a two-class selector), NOT just ".spinner-btn" or ".spinner".
+   A compound selector like this has higher specificity than any single
+   ".spinner" class elsewhere in the project (e.g. the global full-page
+   loader in App.css), so it will always win the CSS cascade no matter
+   which stylesheet loads first or last. This makes the collision that
+   was causing the oversized button structurally impossible, rather
+   than just avoided by naming convention. */
+.btn-loading .spinner-btn {
   width: 13px;
   height: 13px;
   border: 2px solid rgba(255, 255, 255, 0.3);
@@ -216,6 +224,7 @@ input:disabled {
   animation: spin 0.7s linear infinite;
   display: inline-block;
   flex-shrink: 0;
+  margin: 0;
 }
 
 @keyframes spin {

@@ -4,7 +4,7 @@ if (!BASE_URL && process.env.NODE_ENV === 'production') {
   // Fail loudly instead of silently falling back to localhost in prod.
   throw new Error('REACT_APP_API_URL is not set. Refusing to run in production without it.');
 }
-const RESOLVED_BASE_URL = BASE_URL || 'https://nayrafashions-backend.onrender.com';
+const RESOLVED_BASE_URL = BASE_URL || 'https://backend.nayrafashions.com/api';
 
 const DEFAULT_TIMEOUT_MS = 15000;
 

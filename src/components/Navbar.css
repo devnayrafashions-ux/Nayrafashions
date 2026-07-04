@@ -4,7 +4,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Montserrat:wght@300;400;500;600&display=swap');
 
 /* ==========================================
-   ROOT
+   ROOT COLORS
 ========================================== */
 :root{
   --primary:#7B1B1B;
@@ -12,7 +12,7 @@
   --cream:#FAF6F0;
   --text:#2B2B2B;
   --light:#8A7A6A;
-  --white:#fff;
+  --white:#ffffff;
 }
 
 /* RESET */
@@ -21,9 +21,7 @@ a{text-decoration:none;color:inherit;}
 button{border:none;background:none;cursor:pointer;}
 img{display:block;max-width:100%;}
 
-/* ==========================================
-   ANNOUNCEMENT BAR
-========================================== */
+/* ANNOUNCEMENT BAR */
 .announcement-bar{
   width:100%;
   min-height:48px;
@@ -31,18 +29,18 @@ img{display:block;max-width:100%;}
   justify-content:center;
   align-items:center;
   gap:14px;
-  padding:10px 20px;
   background:var(--primary);
   color:#F3DFB2;
-  font:500 13px 'Montserrat',sans-serif;
+  font-family:'Montserrat',sans-serif;
+  font-size:13px;
+  font-weight:500;
   letter-spacing:2px;
+  padding:10px 20px;
 }
-.sparkle{color:var(--gold);}
+.announcement-bar .sparkle{color:var(--gold);font-size:14px;}
 .divider{opacity:.45;}
 
-/* ==========================================
-   NAVBAR
-========================================== */
+/* NAVBAR */
 .navbar{
   position:sticky;
   top:0;
@@ -50,18 +48,17 @@ img{display:block;max-width:100%;}
   width:100%;
   background:var(--cream);
   display:grid;
-  grid-template-columns:80px 1fr 180px;
+  grid-template-columns:80px 1fr 220px;
   align-items:center;
-  padding:10px 48px;
+  padding:8px 48px;
   border-bottom:1px solid rgba(0,0,0,.08);
-  transition:.3s;
+  transition:.35s ease;
 }
 .navbar.scrolled{
-  padding:8px 48px;
+  padding:5px 48px;
   box-shadow:0 5px 18px rgba(0,0,0,.08);
 }
 
-/* LEFT */
 .nav-left{display:flex;align-items:center;}
 .menu-btn{
   width:42px;height:42px;
@@ -75,97 +72,88 @@ img{display:block;max-width:100%;}
 .logo{
   justify-self:center;
   display:flex;
-  align-items:center;
+  align-items:flex-end;
   justify-content:center;
-  gap:2px;
-  transition:.3s;
+  text-decoration:none;
+  /* Desktop columns are asymmetric (80px / 220px), so the 1fr
+     center column isn't visually centered on the page. This
+     nudges the logo right to compensate. Only needed here —
+     mobile/small-phone use equal-width side columns instead,
+     so no compensation is required there. */
+  transform:translateX(35px);
+  transition:.35s;
 }
-.logo:hover{transform:scale(1.02);}
-
+.logo:hover{transform:translateX(35px) scale(1.02);}
 .logo-img{
-  height:74px;
+  height:84px;
   width:auto;
-  margin-right:-14px;
   object-fit:contain;
+  margin-right:-18px;
+  margin-bottom:6px;
   transition:.3s;
 }
-.logo-small{height:60px;}
-
+.logo-small{height:68px;}
 .logo-text{
   display:flex;
   flex-direction:column;
-  align-items:center;
   justify-content:center;
+  align-items:center;
 }
-
 .logo-main{
   font-family:'Cormorant Garamond',serif;
-  font-size:36px;
+  font-size:34px;
   font-weight:600;
   color:var(--primary);
   letter-spacing:5px;
   line-height:1;
 }
-
 .logo-sub{
-  margin-top:4px;
+  margin-top:6px;
   display:flex;
   align-items:center;
   gap:8px;
+  font-family:'Montserrat',sans-serif;
+  font-size:10px;
   color:var(--gold);
-  font:500 10px 'Montserrat',sans-serif;
   letter-spacing:5px;
 }
-.logo-sub::before,
-.logo-sub::after{
+.logo-sub::before,.logo-sub::after{
   content:"";
+  display:inline-block;
   width:18px;
   height:1px;
   background:var(--gold);
 }
 
 /* RIGHT */
-.nav-right{
-  display:flex;
-  justify-content:flex-end;
-  align-items:center;
-  gap:8px;
-}
-
+.nav-right{display:flex;justify-content:flex-end;align-items:center;gap:10px;}
+.nav-right a{display:flex;align-items:center;}
 .nav-icon{
-  width:38px;
-  height:38px;
-  display:flex;
-  justify-content:center;
-  align-items:center;
+  width:38px;height:38px;
+  display:flex;justify-content:center;align-items:center;
+  position:relative;
   border-radius:50%;
   color:var(--text);
-  position:relative;
   transition:.3s;
 }
 .nav-icon:hover{
-  background:rgba(123,27,27,.08);
   color:var(--primary);
+  background:rgba(123,27,27,.08);
+  transform:translateY(-2px);
 }
-
+.nav-icon svg{width:22px;height:22px;}
 .badge{
   position:absolute;
-  top:0;
-  right:-2px;
-  width:18px;
-  height:18px;
+  top:0;right:-2px;
+  width:18px;height:18px;
   border-radius:50%;
   background:var(--primary);
   color:#fff;
   border:2px solid var(--cream);
-  display:flex;
-  justify-content:center;
-  align-items:center;
+  display:flex;justify-content:center;align-items:center;
   font-size:10px;
-  font-weight:600;
 }
 
-/* MOBILE MENU */
 .mobile-menu{
   position:absolute;
   top:100%;
@@ -174,167 +162,75 @@ img{display:block;max-width:100%;}
   background:var(--cream);
   display:flex;
   flex-direction:column;
-  gap:18px;
-  padding:20px 48px;
-  border-bottom:1px solid rgba(0,0,0,.08);
-  box-shadow:0 8px 20px rgba(0,0,0,.08);
+  gap:16px;
+  padding:18px 48px;
 }
-.mobile-menu a{
-  font:500 14px 'Montserrat',sans-serif;
-}
-.mobile-menu a:hover{color:var(--primary);}
 
-/* ================= TABLET ================= */
+/* ==========================================
+   TABLET (≤ 1024px)
+========================================== */
 @media(max-width:1024px){
-
-.navbar{
-  grid-template-columns:70px 1fr 150px;
-  padding:10px 28px;
+.navbar{grid-template-columns:70px 1fr 180px;padding:8px 28px;}
+.navbar.scrolled{padding:5px 28px;}
+.logo{transform:translateX(22px);}
+.logo:hover{transform:translateX(22px) scale(1.02);}
+.logo-img{height:74px;}
+.logo-small{height:60px;}
+.logo-main{font-size:30px;letter-spacing:4px;}
+.logo-sub{font-size:9px;letter-spacing:4px;}
+.announcement-bar{font-size:12px;gap:10px;padding:9px 16px;}
 }
 
-.navbar.scrolled{
-  padding:8px 28px;
-}
-
-.logo-img{height:64px;}
-.logo-small{height:54px;}
-
-.logo-main{
-  font-size:30px;
-  letter-spacing:4px;
-}
-
-.logo-sub{
-  font-size:9px;
-  letter-spacing:4px;
-}
-
-.announcement-bar{
-  font-size:12px;
-  gap:10px;
-  padding:8px 15px;
-}
-
-}
-
-/* ================= MOBILE ================= */
+/* ==========================================
+   MOBILE (≤ 640px)
+   Columns are EQUAL WIDTH (100px / 100px) so the center
+   column is truly centered — no transform compensation needed.
+========================================== */
 @media(max-width:640px){
+.navbar{grid-template-columns:100px 1fr 100px;padding:6px 16px;}
+.navbar.scrolled{padding:4px 16px;}
+.menu-btn{width:36px;height:36px;}
 
-.navbar{
-  grid-template-columns:60px 1fr 120px;
-  padding:8px 14px;
+.logo{transform:none;}
+.logo:hover{transform:scale(1.02);}
+.logo-img{height:50px;margin-right:-10px;}
+.logo-small{height:42px;}
+.logo-main{font-size:19px;letter-spacing:2px;}
+.logo-sub{font-size:7.5px;letter-spacing:2px;gap:4px;}
+.logo-sub::before,.logo-sub::after{width:8px;}
+
+/* 3 icons must fit inside the 100px right column:
+   32px × 3 + 2px gap × 2 = 100px exactly. */
+.nav-right{gap:2px;}
+.nav-icon{width:32px;height:32px;}
+.nav-icon svg{width:17px;height:17px;}
+.badge{width:14px;height:14px;font-size:8px;}
+
+.announcement-bar{flex-wrap:wrap;row-gap:4px;font-size:11px;letter-spacing:1px;padding:8px 12px;min-height:auto;}
+.divider{display:none;}
+.mobile-menu{padding:16px 20px;font-size:15px;gap:18px;}
 }
 
-.menu-btn{
-  width:36px;
-  height:36px;
-}
-
-.logo-img{
-  height:52px;
-  margin-right:-8px;
-}
-
-.logo-small{
-  height:46px;
-}
-
-.logo-main{
-  font-size:24px;
-  letter-spacing:3px;
-}
-
-.logo-sub{
-  display:flex;
-  font-size:8px;
-  letter-spacing:3px;
-  gap:5px;
-}
-
-.logo-sub::before,
-.logo-sub::after{
-  width:12px;
-}
-
-.nav-right{
-  gap:2px;
-}
-
-.nav-icon{
-  width:34px;
-  height:34px;
-}
-
-.nav-icon svg{
-  width:19px;
-  height:19px;
-}
-
-.badge{
-  width:15px;
-  height:15px;
-  font-size:8px;
-}
-
-.announcement-bar{
-  flex-wrap:wrap;
-  gap:6px;
-  font-size:11px;
-  letter-spacing:1px;
-  padding:8px;
-}
-
-.divider{
-  display:none;
-}
-
-.mobile-menu{
-  padding:18px;
-}
-
-}
-
-/* ================= SMALL PHONE ================= */
+/* ==========================================
+   SMALL PHONE (≤ 380px)
+   Columns are EQUAL WIDTH (85px / 85px) — same centering logic.
+========================================== */
 @media(max-width:380px){
+.navbar{grid-template-columns:85px 1fr 85px;padding:6px 10px;}
+.logo{transform:none;}
+.logo:hover{transform:scale(1.02);}
+.logo-img{height:40px;margin-right:-8px;}
+.logo-small{height:36px;}
+.logo-main{font-size:16px;letter-spacing:1px;}
 
-.navbar{
-  grid-template-columns:50px 1fr 100px;
-  padding:6px 10px;
-}
+/* Screen is too narrow for the tagline plus wordmark plus
+   image without crowding — drop the tagline, keep the wordmark. */
+.logo-sub{display:none;}
 
-.logo-img{
-  height:44px;
-}
-
-.logo-main{
-  font-size:20px;
-  letter-spacing:2px;
-}
-
-.logo-sub{
-  font-size:7px;
-  letter-spacing:2px;
-}
-
-.logo-sub::before,
-.logo-sub::after{
-  width:10px;
-}
-
-.nav-icon{
-  width:30px;
-  height:30px;
-}
-
-.nav-icon svg{
-  width:16px;
-  height:16px;
-}
-
-.badge{
-  width:13px;
-  height:13px;
-  font-size:7px;
-}
-
+/* 3 icons must fit inside the 85px left/right columns:
+   28px × 3 + 0px gap = 84px. */
+.nav-right{gap:0;}
+.nav-icon{width:28px;height:28px;}
+.nav-icon svg{width:15px;height:15px;}
+.badge{width:12px;height:12px;font-size:7px;}
 }

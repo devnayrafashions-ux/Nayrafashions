@@ -30,7 +30,6 @@ const OrderCard = ({ order }) => {
             <Package size={18} strokeWidth={1.5} />
           </div>
           <div>
-            <p className="order-id">Order #{order.id}</p>
             <p className="order-date">
               {new Date(order.created_at).toLocaleDateString('en-IN', {
                 day: 'numeric', month: 'long', year: 'numeric'

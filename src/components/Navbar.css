@@ -636,13 +636,25 @@ a:focus {
     letter-spacing: 1px;
   }
 
+  /* 3 icons at 34px + inherited gaps overflowed the 90px column
+     on very small phones — tighten gap and icon size to fit. */
+  .nav-right{
+    gap: 0px;
+  }
+
   .nav-icon{
-    width: 30px;
-    height: 30px;
+    width: 28px;
+    height: 28px;
   }
 
   .nav-icon svg{
-    width: 17px;
-    height: 17px;
+    width: 16px;
+    height: 16px;
+  }
+
+  .badge{
+    width: 13px;
+    height: 13px;
+    font-size: 8px;
   }
 }

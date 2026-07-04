@@ -207,16 +207,7 @@ input:disabled {
   gap: 10px;
 }
 
-/* Renamed from .spinner to .spinner-btn: the global stylesheet
-   (App.css) already defines a `.spinner` class for a big, centered
-   full-page loader (36px, margin: 60px auto). Because both files
-   used the same class name with equal specificity, whichever
-   stylesheet loaded last was winning and applying that huge
-   36px + 60px-margin spinner INSIDE this button — which is exactly
-   what made the "Create Account" button balloon in size while
-   loading. Renaming this one to `.spinner-btn` removes the clash
-   entirely, no matter which CSS file loads first or last. */
-.spinner-btn {
+.spinner {
   width: 13px;
   height: 13px;
   border: 2px solid rgba(255, 255, 255, 0.3);

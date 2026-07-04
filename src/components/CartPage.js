@@ -5,12 +5,17 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import './CartPage.css';
 
+// Single source of truth for the free-shipping threshold on this page.
+// Keep this in sync with CheckoutPage.jsx (and ideally move both to a
+// shared constants file — see note at the bottom of this file).
+const FREE_SHIPPING_THRESHOLD = 2999;
+
 const CartPage = () => {
   const { cart, cartTotal, cartCount, removeFromCart, updateQuantity } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const shipping = cartTotal >= 999 || cartTotal === 0 ? 0 : 99;
+  const shipping = cartTotal >= FREE_SHIPPING_THRESHOLD || cartTotal === 0 ? 0 : 99;
   const grandTotal = cartTotal + shipping;
 
   const handleCheckout = () => {
@@ -97,7 +102,7 @@ const CartPage = () => {
               <span>{shipping === 0 ? <span className="free-tag">FREE</span> : `₹${shipping}`}</span>
             </div>
             {shipping > 0 && (
-              <p className="free-shipping-note">Add ₹{(999 - cartTotal).toFixed(0)} more for free shipping</p>
+              <p className="free-shipping-note">Add ₹{(FREE_SHIPPING_THRESHOLD - cartTotal).toFixed(0)} more for free shipping</p>
             )}
           </div>
           <div className="summary-total">
@@ -109,7 +114,7 @@ const CartPage = () => {
           </button>
           <Link to="/products" className="continue-shopping">← Continue Shopping</Link>
           <div className="cart-perks">
-            <p>✓ Free shipping on orders above ₹999</p>
+            <p>✓ Free shipping on orders above ₹{FREE_SHIPPING_THRESHOLD.toLocaleString()}</p>
             <p>✓ 100% authentic products</p>
           </div>
         </div>
@@ -119,3 +124,8 @@ const CartPage = () => {
 };
 
 export default CartPage;
+
+// NOTE: This threshold (2999) is duplicated in CheckoutPage.jsx and in the
+// Navbar.jsx announcement bar text. If you'd like, I can pull it into a
+// single shared file (e.g. src/constants.js) that all three import from,
+// so future changes only need to happen in one place.

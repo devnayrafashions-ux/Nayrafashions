@@ -6,6 +6,9 @@ import { useToast } from '../context/ToastContext';
 import { ordersAPI, paymentsAPI } from '../services/api';
 import './CheckoutPage.css';
 
+// Keep this in sync with CartPage.jsx (and the Navbar.jsx banner text).
+const FREE_SHIPPING_THRESHOLD = 2999;
+
 const loadRazorpay = () =>
   new Promise(resolve => {
     if (window.Razorpay) { resolve(true); return; }
@@ -35,7 +38,7 @@ const CheckoutPage = () => {
 
   const set = (k) => (e) => setAddr(p => ({ ...p, [k]: e.target.value }));
 
-  const shipping = cartTotal >= 999 ? 0 : 99;
+  const shipping = cartTotal >= FREE_SHIPPING_THRESHOLD ? 0 : 99;
   const grandTotal = cartTotal + shipping;
 
   const handlePlaceOrder = async () => {

@@ -39,7 +39,7 @@ const Navbar = () => {
 
       <div className="announcement-bar">
         <span className="sparkle">✦</span>
-        <span>FREE SHIPPING ON ORDERS ABOVE ₹999</span>
+        <span>FREE SHIPPING ON ORDERS ABOVE ₹2999</span>
         <span className="divider">|</span>
         <span>NEW ARRIVALS EVERY FRIDAY</span>
         <span className="sparkle">✦</span>

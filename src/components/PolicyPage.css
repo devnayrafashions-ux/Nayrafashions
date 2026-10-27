@@ -1,0 +1,209 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Montserrat:wght@300;400;500;600&display=swap');
+
+.policy-page {
+  --policy-maroon: #7B1B1B;
+  --policy-gold: #C9A24B;
+  --policy-cream: #FAF6F0;
+  --policy-text: #000000;
+  --policy-muted: #000000;
+
+  width: 100%;
+  min-height: 70vh;
+  padding: 28px 24px 70px;
+  background: var(--policy-cream);
+  color: #000000;
+  font-family: 'Montserrat', sans-serif;
+}
+
+/* Breadcrumb */
+.policy-breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  max-width: 900px;
+  margin: 0 auto 36px;
+  font-size: 12px;
+  color: #000000;
+}
+
+.policy-breadcrumb a,
+.policy-back a {
+  color: var(--policy-maroon);
+  text-decoration: none;
+}
+
+.policy-breadcrumb a:hover,
+.policy-back a:hover {
+  text-decoration: underline;
+}
+
+/* Page Header */
+.policy-header {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 30px 10px 36px;
+  text-align: center;
+  border-bottom: 1px solid rgba(123, 27, 27, 0.16);
+}
+
+.policy-brand {
+  display: block;
+  margin-bottom: 12px;
+  color: var(--policy-gold);
+  font-family: 'Montserrat', sans-serif;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 4px;
+}
+
+.policy-header h1 {
+  margin: 0 0 16px;
+  color: var(--policy-maroon);
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(34px, 5vw, 48px);
+  font-weight: 600;
+  line-height: 1.15;
+}
+
+.policy-header > p {
+  max-width: 720px;
+  margin: 0 auto;
+  font-size: 14px;
+  line-height: 1.9;
+  color: #000000;
+}
+
+/* Policy Content */
+.policy-content {
+  max-width: 900px;
+  margin: 0 auto;
+  padding-top: 20px;
+}
+
+/* Individual Sections */
+.policy-section {
+  padding: 22px 0;
+  border-bottom: 1px solid rgba(123, 27, 27, 0.09);
+}
+
+.policy-section h2 {
+  margin: 0 0 14px;
+  color: var(--policy-maroon);
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 25px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+/* All Paragraphs and Lists in Black */
+.policy-section p,
+.policy-section li {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.9;
+  color: #000000;
+  overflow-wrap: anywhere;
+}
+
+.policy-section p {
+  margin: 0 0 12px;
+}
+
+.policy-section ul {
+  margin: 10px 0 16px;
+  padding-left: 24px;
+}
+
+.policy-section li {
+  padding-left: 4px;
+  margin-bottom: 6px;
+}
+
+/* Emphasized Text — Black */
+.policy-emphasis {
+  color: #000000 !important;
+  font-weight: 600 !important;
+}
+
+/* Contact Details */
+.policy-contact {
+  padding: 18px 20px;
+  margin-top: 14px;
+  background: rgba(123, 27, 27, 0.045);
+  border-left: 3px solid var(--policy-gold);
+}
+
+.policy-contact p {
+  margin-bottom: 8px;
+  color: #000000;
+}
+
+.policy-contact p:last-child {
+  margin-bottom: 0;
+}
+
+/* Back to Home */
+.policy-back {
+  max-width: 900px;
+  margin: 32px auto 0;
+  text-align: center;
+  font-size: 12px;
+}
+
+.policy-back a {
+  color: var(--policy-maroon);
+}
+
+/* Responsive Design */
+@media (max-width: 640px) {
+  .policy-page {
+    padding: 22px 18px 48px;
+  }
+
+  .policy-breadcrumb {
+    justify-content: flex-start;
+    margin-bottom: 20px;
+    font-size: 11px;
+    color: #000000;
+  }
+
+  .policy-header {
+    padding: 22px 0 28px;
+  }
+
+  .policy-brand {
+    font-size: 9px;
+    letter-spacing: 3px;
+  }
+
+  .policy-header h1 {
+    font-size: 34px;
+  }
+
+  .policy-header > p {
+    font-size: 12px;
+    color: #000000;
+  }
+
+  .policy-section {
+    padding: 18px 0;
+  }
+
+  .policy-section h2 {
+    font-size: 23px;
+  }
+
+  .policy-section p,
+  .policy-section li {
+    font-size: 12px;
+    line-height: 1.85;
+    color: #000000;
+  }
+
+  .policy-contact p {
+    color: #000000;
+  }
+}

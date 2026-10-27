@@ -1,0 +1,458 @@
+
+/* ==========================================
+   HERO SECTION
+========================================== */
+
+.hero {
+  position: relative;
+  width: 100%;
+  height: calc(100vh - 90px);
+  min-height: 600px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  overflow: hidden;
+  isolation: isolate;
+  background: #3a0b0b;
+}
+
+/* ==========================================
+   BACKGROUND SLIDER
+========================================== */
+
+.hero-bg {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  background: #3a0b0b;
+}
+
+.hero-bg-slide {
+  position: absolute;
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+
+  opacity: 0;
+  transition: opacity 1.2s ease;
+}
+
+.hero-bg-slide.active {
+  opacity: 1;
+}
+
+/* ==========================================
+   IMAGE OVERLAY
+========================================== */
+
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+
+  background: linear-gradient(
+    to bottom,
+    rgba(58, 11, 11, 0.08) 0%,
+    rgba(58, 11, 11, 0.12) 55%,
+    rgba(31, 6, 6, 0.25) 100%
+  );
+
+  pointer-events: none;
+}
+
+/* ==========================================
+   HERO CONTENT
+========================================== */
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+
+  width: 100%;
+  padding: 0 20px;
+
+  text-align: center;
+  color: var(--white);
+
+  opacity: 0;
+  transform: translateY(30px);
+
+  transition:
+    opacity 0.8s ease,
+    transform 0.8s ease;
+}
+
+.hero.loaded .hero-content {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ==========================================
+   SEASON TEXT
+========================================== */
+
+.hero-season {
+  margin-bottom: 24px;
+
+  font-family: 'Montserrat', sans-serif;
+  font-size: 11px;
+  letter-spacing: 4px;
+  color: var(--gold-light);
+
+  opacity: 0;
+  transition: opacity 0.8s ease 0.2s;
+}
+
+.hero.loaded .hero-season {
+  opacity: 1;
+}
+
+/* ==========================================
+   HERO TITLE
+========================================== */
+
+.hero-title {
+  display: flex;
+  flex-direction: column;
+
+  margin-bottom: 28px;
+
+  font-size: clamp(72px, 12vw, 140px);
+  font-weight: 400;
+  line-height: 0.9;
+  letter-spacing: -2px;
+  color: var(--white);
+}
+
+.hero-title span:nth-child(1),
+.hero-title span:nth-child(2) {
+  opacity: 0;
+  transform: translateY(20px);
+
+  transition:
+    opacity 0.7s ease,
+    transform 0.7s ease;
+}
+
+.hero-title span:nth-child(1) {
+  transition-delay: 0.3s;
+}
+
+.hero-title span:nth-child(2) {
+  transition-delay: 0.5s;
+}
+
+.hero.loaded .hero-title span {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ==========================================
+   GOLD DIVIDER
+========================================== */
+
+.hero-divider {
+  width: 40px;
+  height: 1px;
+
+  margin: 0 auto 24px;
+
+  background: var(--gold);
+
+  opacity: 0;
+  transition: opacity 0.8s ease 0.7s;
+}
+
+.hero.loaded .hero-divider {
+  opacity: 1;
+}
+
+/* ==========================================
+   SUBTITLE
+========================================== */
+
+.hero-subtitle {
+  margin-bottom: 40px;
+
+  font-size: 14px;
+  font-weight: 300;
+  letter-spacing: 1px;
+  color: rgba(255, 255, 255, 0.85);
+
+  opacity: 0;
+  transition: opacity 0.8s ease 0.8s;
+}
+
+.hero.loaded .hero-subtitle {
+  opacity: 1;
+}
+
+/* ==========================================
+   HERO BUTTONS
+========================================== */
+
+.hero-buttons {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 16px;
+
+  opacity: 0;
+  transition: opacity 0.8s ease 0.9s;
+}
+
+.hero.loaded .hero-buttons {
+  opacity: 1;
+}
+
+.btn-gold {
+  padding: 14px 32px;
+
+  background: var(--gold);
+  color: var(--white);
+  border: none;
+
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 3px;
+
+  transition:
+    background-color 0.3s ease,
+    transform 0.2s ease;
+}
+
+.btn-gold:hover {
+  background: var(--gold-light);
+  transform: translateY(-1px);
+}
+
+.btn-outline {
+  padding: 14px 32px;
+
+  background: transparent;
+  color: var(--white);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 3px;
+
+  transition:
+    border-color 0.3s ease,
+    background-color 0.3s ease;
+}
+
+.btn-outline:hover {
+  border-color: var(--white);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* ==========================================
+   SCROLL INDICATOR
+========================================== */
+
+.hero-scroll {
+  position: absolute;
+  right: 32px;
+  bottom: 32px;
+  z-index: 2;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+
+  color: rgba(255, 255, 255, 0.65);
+
+  font-size: 9px;
+  letter-spacing: 3px;
+  writing-mode: vertical-rl;
+  pointer-events: none;
+}
+
+.scroll-line {
+  width: 1px;
+  height: 40px;
+
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.65),
+    transparent
+  );
+
+  animation: scrollPulse 2s ease infinite;
+}
+
+@keyframes scrollPulse {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+/* ==========================================
+   TABLET
+========================================== */
+
+@media (max-width: 1024px) {
+  .hero {
+    min-height: 520px;
+  }
+
+  .hero-title {
+    font-size: clamp(54px, 10vw, 100px);
+  }
+}
+
+/* ==========================================
+   MOBILE
+========================================== */
+
+@media (max-width: 768px) {
+  .hero {
+    width: 100%;
+    height: calc(100vh - 70px);
+    height: calc(100svh - 70px);
+    min-height: 500px;
+
+    padding: 0;
+    margin: 0;
+
+    overflow: hidden;
+    background: #3a0b0b;
+  }
+
+  .hero-bg {
+    position: absolute;
+    inset: 0;
+
+    width: 100%;
+    height: 100%;
+
+    background: #3a0b0b;
+  }
+
+  /*
+    Slightly zoom out the portrait images.
+    The image stays full-width without maroon gaps.
+  */
+
+  .hero-bg-slide {
+    inset: 0;
+    width: 100%;
+    height: 100%;
+
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
+  }
+
+  .hero-overlay {
+    background: linear-gradient(
+      to bottom,
+      rgba(58, 11, 11, 0.02),
+      rgba(31, 6, 6, 0.10)
+    );
+  }
+
+  .hero-content {
+    width: 100%;
+    padding: 0 24px;
+  }
+
+  .hero-title {
+    font-size: clamp(42px, 13vw, 72px);
+    letter-spacing: -1px;
+    margin-bottom: 20px;
+  }
+
+  .hero-season {
+    font-size: 9px;
+    letter-spacing: 2.5px;
+    margin-bottom: 16px;
+  }
+
+  .hero-subtitle {
+    font-size: 12px;
+    padding: 0 10px;
+    margin-bottom: 24px;
+  }
+
+  .hero-buttons {
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 0 20px;
+  }
+
+  .btn-gold,
+  .btn-outline {
+    width: 100%;
+    text-align: center;
+    padding: 14px 20px;
+  }
+
+  .hero-scroll {
+    right: 12px;
+    bottom: 18px;
+    font-size: 8px;
+  }
+
+  .scroll-line {
+    height: 28px;
+  }
+}
+
+/* ==========================================
+   SMALL MOBILE
+========================================== */
+
+@media (max-width: 380px) {
+  .hero {
+    min-height: 450px;
+  }
+
+  .hero-content {
+    padding: 0 16px;
+  }
+
+  .hero-title {
+    font-size: 42px;
+  }
+
+  .hero-scroll {
+    right: 8px;
+    bottom: 12px;
+  }
+}
+
+/* ==========================================
+   REDUCED MOTION
+========================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-content,
+  .hero-season,
+  .hero-title span,
+  .hero-divider,
+  .hero-subtitle,
+  .hero-buttons,
+  .hero-bg-slide {
+    transition: none;
+  }
+
+  .scroll-line {
+    animation: none;
+  }
+}

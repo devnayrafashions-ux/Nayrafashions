@@ -1,53 +1,116 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { categoriesAPI } from '../services/api';
 import './Collections.css';
 
+const FALLBACK_IMAGE =
+  'https://images.unsplash.com/photo-1583391733956-6c78276477e2?w=900&q=85';
+
+const getCategoryImage = (category) => {
+  const image =
+    category.image ||
+    category.image_url ||
+    category.imageUrl ||
+    category.photo ||
+    category.thumbnail;
+
+  if (!image || typeof image !== 'string') {
+    return FALLBACK_IMAGE;
+  }
+
+  // Keep absolute URLs, including Cloudinary URLs, unchanged.
+  if (/^https?:\/\//i.test(image)) {
+    return image;
+  }
+
+  // Resolve relative media paths against the backend origin.
+  const apiBase = process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000';
+  const backendOrigin = apiBase.replace(/\/api\/?$/, '').replace(/\/$/, '');
+
+  return `${backendOrigin}/${image.replace(/^\/+/, '')}`;
+};
+
 const Collections = () => {
-  const [collections, setCollections] = useState([]);
+  const [categories, setCategories] = useState([]);
 
   useEffect(() => {
-    categoriesAPI.getAll()
-      .then(data => {
-        const cats = Array.isArray(data) ? data : data.results || [];
-        if (cats.length > 0) {
-          const apiCollections = cats.map(c => ({
-            slug: c.slug,
-            name: c.name.toUpperCase(),
-            description: c.description?.toUpperCase() || '',
-            image: c.image || 'https://images.unsplash.com/photo-1583391733956-6c78276477e2?w=600&q=80',
-          }));
-          setCollections(apiCollections.slice(0, 4));
+    let isMounted = true;
+
+    categoriesAPI
+      .getAll()
+      .then((data) => {
+        const cats = Array.isArray(data)
+          ? data
+          : Array.isArray(data?.results)
+          ? data.results
+          : [];
+
+        if (isMounted) {
+          setCategories(
+            cats
+              .filter((category) => category.is_active !== false)
+              .map((category) => ({
+                id: category.id,
+                slug: category.slug,
+                name: category.name,
+                image: getCategoryImage(category),
+              }))
+          );
         }
       })
-      .catch(() => {});
+      .catch((error) => {
+        console.error('Failed to load categories:', error);
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
-  if (collections.length === 0) return null;
+  if (categories.length === 0) return null;
 
   return (
-    <section className="collections-section">
-      <div className="section-header">
-        <p className="section-label">BROWSE BY CATEGORY</p>
-        <h2 className="section-title">OUR COLLECTIONS</h2>
-        <div className="section-divider" />
+    <section className="categories-section">
+      <div className="categories-header">
+        <p className="categories-label">EXPLORE OUR STYLE</p>
+        <h2 className="categories-title">OUR CATEGORIES</h2>
+        <div className="categories-divider" />
+        <p className="categories-description">
+          Discover something beautiful for every occasion.
+        </p>
       </div>
-      <div className="collections-grid">
-        {collections.map((col, i) => (
+
+      <div className="categories-grid">
+        {categories.map((category, index) => (
           <Link
-            to={`/collections/${col.slug}`}
-            key={col.slug}
-            className="collection-card"
-            style={{ animationDelay: `${i * 0.1}s` }}
+            to={`/collections/${category.slug}`}
+            key={category.id || category.slug}
+            className="category-card"
+            style={{ animationDelay: `${index * 0.08}s` }}
           >
-            <div className="card-image">
-              <img src={col.image} alt={col.name} />
-              <div className="card-overlay" />
+            <div className="category-image-wrap">
+              <img
+                src={category.image}
+                alt={category.name}
+                className="category-image"
+                loading="lazy"
+                onError={(event) => {
+                  console.error(
+                    `Failed to load image for ${category.name}:`,
+                    category.image
+                  );
+                  event.currentTarget.onerror = null;
+                  event.currentTarget.src = FALLBACK_IMAGE;
+                }}
+              />
             </div>
-            <div className="card-content">
-              <p className="card-subtitle">{col.description}</p>
-              <h3 className="card-name">{col.name}</h3>
-              <button className="card-btn">SHOP NOW</button>
+
+            <div className="category-card-content">
+              <h3 className="category-name">{category.name}</h3>
+              <span className="category-shop-link">
+                SHOP NOW <span aria-hidden="true">↗</span>
+              </span>
             </div>
           </Link>
         ))}

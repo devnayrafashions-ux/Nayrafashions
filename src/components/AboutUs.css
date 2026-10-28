@@ -1,0 +1,102 @@
+
+.about-us-page {
+  background: #faf6f0;
+  color: #000;
+  min-height: 60vh;
+  padding-bottom: 70px;
+  font-family: "Montserrat", sans-serif;
+}
+
+.about-us-hero {
+  padding: 75px 20px 65px;
+  text-align: center;
+  background: #f5eee5;
+  border-bottom: 1px solid #e6d9cb;
+}
+
+.about-us-label {
+  margin: 0 0 14px;
+  color: #7b1b1b;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 3px;
+}
+
+.about-us-hero h1 {
+  margin: 0;
+  color: #7b1b1b;
+  font-family: "Cormorant Garamond", serif;
+  font-size: clamp(36px, 5vw, 54px);
+  font-weight: 500;
+}
+
+.about-us-tagline {
+  margin: 15px 0 0;
+  color: #000;
+  font-family: "Cormorant Garamond", serif;
+  font-size: 21px;
+  font-style: italic;
+}
+
+.about-us-content {
+  max-width: 950px;
+  margin: 0 auto;
+  padding: 55px 28px 0;
+}
+
+.about-us-content h2 {
+  margin: 0 0 20px;
+  color: #7b1b1b;
+  font-family: "Cormorant Garamond", serif;
+  font-size: 32px;
+  font-weight: 600;
+}
+
+.about-us-content p {
+  margin: 0 0 20px;
+  color: #000;
+  font-size: 14px;
+  line-height: 2;
+}
+
+@media (max-width: 600px) {
+  .about-us-hero {
+    padding: 55px 18px 45px;
+  }
+
+  .about-us-content {
+    padding: 38px 20px 0;
+  }
+
+  .about-us-content h2 {
+    font-size: 28px;
+  }
+
+  .about-us-content p {
+    font-size: 13px;
+    line-height: 1.9;
+  }
+}
+
+/* Justify About Us content */
+.about-us-content p {
+  text-align: justify;
+  text-justify: inter-word;
+  color: #000000;
+  line-height: 2;
+  overflow-wrap: break-word;
+}
+
+/* Keep headings aligned to the left */
+.about-us-content h2 {
+  text-align: left;
+  color: #7b1b1b;
+}
+
+/* Responsive spacing */
+@media (max-width: 600px) {
+  .about-us-content p {
+    text-align: justify;
+    line-height: 1.9;
+  }
+}

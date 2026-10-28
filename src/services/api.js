@@ -1,10 +1,35 @@
-const BASE_URL = process.env.REACT_APP_API_URL;
+// ─── Base URL ────────────────────────────────────────────────────
+// Only accept a value that is a real http(s) URL. Anything else (empty,
+// whitespace, ".", "/", a stray character from a bad .env) is ignored and
+// we fall back to the local Django server.
+const RAW_BASE_URL = (process.env.REACT_APP_API_URL || '').trim();
+const CLEAN_BASE_URL = /^https?:\/\//.test(RAW_BASE_URL)
+  ? RAW_BASE_URL.replace(/\/+$/, '')   // strip trailing slash(es)
+  : '';
+
+// If the value points at the React dev server itself (e.g. http://localhost:3000),
+// API calls would hit React instead of Django and 404. Ignore it.
+const POINTS_AT_SELF =
+  typeof window !== 'undefined' && CLEAN_BASE_URL.startsWith(window.location.origin);
+const BASE_URL = POINTS_AT_SELF ? '' : CLEAN_BASE_URL;
 
 if (!BASE_URL && process.env.NODE_ENV === 'production') {
   // Fail loudly instead of silently falling back to localhost in prod.
   throw new Error('REACT_APP_API_URL is not set. Refusing to run in production without it.');
 }
-const RESOLVED_BASE_URL = BASE_URL || 'https://www.backend.nayrafashions.com/api';
+
+// Production API (live):
+// const RESOLVED_BASE_URL = BASE_URL || 'https://www.backend.nayrafashions.com/api';
+
+// Local development API (make sure your backend is running on port 8000).
+// Use "localhost" (not 127.0.0.1): Django's CORS list allows http://localhost:3000.
+const RESOLVED_BASE_URL = BASE_URL || 'http://localhost:8000/api';
+
+if (process.env.NODE_ENV !== 'production') {
+  // Remove this once everything works.
+  console.log('[api.js] RAW ENV:', JSON.stringify(process.env.REACT_APP_API_URL), '| USING:', RESOLVED_BASE_URL);
+}
+
 const DEFAULT_TIMEOUT_MS = 15000;
 
 // ─── Auth event bus ──────────────────────────────────────────────
@@ -21,10 +46,9 @@ function emitAuthExpired() {
 }
 
 // ─── CSRF helper ─────────────────────────────────────────────────
-// Tokens now live in httpOnly cookies set by the backend — no JS
-// access to them, and no manual attach/clear needed. The one thing
-// JS still needs to read is the (non-httpOnly) CSRF cookie, to echo
-// it back on mutating requests.
+// Tokens live in httpOnly cookies set by the backend — no JS access to
+// them. The one thing JS still needs to read is the (non-httpOnly) CSRF
+// cookie, to echo it back on mutating requests.
 function getCsrfToken() {
   const match = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);
   return match ? decodeURIComponent(match[1]) : null;
@@ -35,6 +59,22 @@ function withCsrfHeader(headers = {}, method = 'GET') {
   if (!needsCsrf) return headers;
   const csrfToken = getCsrfToken();
   return csrfToken ? { ...headers, 'X-CSRFToken': csrfToken } : headers;
+}
+
+// ─── Error message helper ────────────────────────────────────────
+// Django/DRF returns errors in several shapes:
+//   { detail: "..." }
+//   { message: "..." }
+//   { email: ["No account found ..."] }
+//   { non_field_errors: ["..."] }
+// Pull out the first readable message instead of showing "API error".
+function extractErrorMessage(errorData, fallback) {
+  if (!errorData || typeof errorData !== 'object') return fallback;
+  if (typeof errorData.detail === 'string') return errorData.detail;
+  if (typeof errorData.message === 'string') return errorData.message;
+  const first = Object.values(errorData).flat()[0];
+  if (typeof first === 'string') return first;
+  return fallback;
 }
 
 // ─── Fetch with timeout ──────────────────────────────────────────
@@ -64,9 +104,9 @@ async function refreshAccessToken() {
 
   refreshPromise = (async () => {
     try {
-      // No body needed — the refresh token cookie is sent
-      // automatically (scoped to this path server-side) and the new
-      // access/refresh cookies are set directly on the response.
+      // No body needed — the refresh token cookie is sent automatically
+      // (scoped to this path server-side) and the new access/refresh
+      // cookies are set directly on the response.
       const res = await fetchWithTimeout(`${RESOLVED_BASE_URL}/auth/token/refresh/`, {
         method: 'POST',
         headers: withCsrfHeader({ 'Content-Type': 'application/json' }, 'POST'),
@@ -106,7 +146,7 @@ async function apiFetch(endpoint, options = {}) {
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    const err = new Error(errorData.detail || errorData.message || 'API error');
+    const err = new Error(extractErrorMessage(errorData, 'API error'));
     err.response = { status: response.status, data: errorData };
     throw err;
   }
@@ -118,8 +158,8 @@ async function apiFetch(endpoint, options = {}) {
 // Multipart form data (for file uploads)
 async function apiFetchForm(endpoint, formData, method = 'POST') {
   const headers = withCsrfHeader({}, method);
-  // Longer timeout for uploads — large files take longer than a
-  // normal JSON request.
+  // Longer timeout for uploads — large files take longer than a normal
+  // JSON request.
   const response = await fetchWithTimeout(
     `${RESOLVED_BASE_URL}${endpoint}`,
     { method, headers, body: formData, credentials: 'include' },
@@ -127,7 +167,7 @@ async function apiFetchForm(endpoint, formData, method = 'POST') {
   );
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    const err = new Error(errorData.detail || errorData.message || 'Upload error');
+    const err = new Error(extractErrorMessage(errorData, 'Upload error'));
     err.response = { status: response.status, data: errorData };
     throw err;
   }

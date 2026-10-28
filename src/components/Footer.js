@@ -1,86 +1,181 @@
-import React from 'react';
-import { Truck, Heart, Shield } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import './Footer.css';
 
-const features = [
-  { icon: <Truck size={20} />, title: 'FREE SHIPPING', sub: 'On orders above ₹2999' },
-  { icon: <Heart size={20} />, title: 'HANDCRAFTED', sub: 'Made with love & care' },
-  { icon: <Shield size={20} />, title: 'SECURE PAYMENT', sub: '100% safe checkout' },
-];
+import React from "react";
+import { Link } from "react-router-dom";
+import {
+  FaShippingFast,
+  FaHeart,
+  FaLock,
+  FaInstagram,
+  FaPhoneAlt,
+  FaEnvelope,
+  FaMapMarkerAlt,
+} from "react-icons/fa";
+import "./Footer.css";
 
 const Footer = () => {
-  const navigate = useNavigate();
+  // Header navigation links displayed under SHOP
+  const headerLinks = [
+    { label: "Home", path: "/" },
+    { label: "Budget Friendly", path: "/collections/budget-friendly" },
+    { label: "Festive Collections", path: "/collections/festive" },
+    { label: "New Arrivals", path: "/collections/new-arrivals" },
+    { label: "Own Brand", path: "/collections/own-brand" },
+    { label: "My Orders", path: "/orders" },
+  ];
+
+  const accountLinks = [
+    { label: "Login", path: "/login" },
+    { label: "Register", path: "/register" },
+    { label: "My Orders", path: "/orders" },
+    { label: "Wishlist", path: "/wishlist" },
+    { label: "Cart", path: "/cart" },
+  ];
+
+  const policyLinks = [
+    { label: "Privacy Policy", path: "/privacy-policy" },
+    { label: "Terms & Conditions", path: "/terms-and-conditions" },
+    { label: "Shipping Policy", path: "/shipping-policy" },
+    { label: "Refund Policy", path: "/refund-policy" },
+  ];
 
   return (
-    <footer className="footer">
-
-      {/* Features Bar */}
-      <div className="features-bar">
-        {features.map((f, i) => (
-          <div key={i} className="feature-item">
-            <div className="feature-icon">{f.icon}</div>
-            <p className="feature-title">{f.title}</p>
-            <p className="feature-sub">{f.sub}</p>
+    <footer className="nayra-footer">
+      {/* Features */}
+      <div className="footer-features">
+        <div className="footer-feature">
+          <FaShippingFast className="footer-feature-icon" />
+          <div>
+            <h4>FREE SHIPPING</h4>
+            <p>On orders above ₹2999</p>
           </div>
-        ))}
+        </div>
+
+        <div className="footer-feature">
+          <FaHeart className="footer-feature-icon" />
+          <div>
+            <h4>HANDCRAFTED</h4>
+            <p>Made with love & care</p>
+          </div>
+        </div>
+
+        <div className="footer-feature">
+          <FaLock className="footer-feature-icon" />
+          <div>
+            <h4>SECURE PAYMENT</h4>
+            <p>100% safe checkout</p>
+          </div>
+        </div>
       </div>
 
       {/* Main Footer */}
       <div className="footer-main">
-
         {/* Brand */}
         <div className="footer-brand">
-          <div className="footer-logo">
-            <span className="footer-logo-main">NAYRA</span>
-            <span className="footer-logo-sub">FASHIONS</span>
-          </div>
-          <p className="footer-tagline">
-            Elegance redefined — crafted for the modern Indian woman.
+          <Link
+            to="/"
+            className="footer-logo"
+            aria-label="Nayra Fashions Home"
+          >
+            <span className="footer-logo-name">NAYRA</span>
+            <span className="footer-logo-subtitle">FASHIONS</span>
+          </Link>
+
+          <p className="footer-tagline">Where Comfort Meets You</p>
+
+          <p className="footer-brand-description">
+            Discover timeless ethnic wear designed to bring together comfort,
+            elegance, and everyday style.
           </p>
+
+          <a
+            href="https://www.instagram.com/nayrafashions10/"
+            className="footer-social-link"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Visit Nayra Fashions on Instagram"
+          >
+            <FaInstagram />
+            <span>@nayrafashions10</span>
+          </a>
         </div>
 
-        {/* Footer Links */}
-        <div className="footer-links">
+        {/* SHOP - Header Links Directly Under the Heading */}
+        <div className="footer-column footer-shop-column">
+          <h3>SHOP</h3>
 
-          {/* Shop */}
-          <div className="footer-col">
-            <h4>SHOP</h4>
-            <span onClick={() => navigate('/products')}>All Products</span>
-            <span onClick={() => navigate('/collections/new-arrivals')}>New Arrivals</span>
-            <span onClick={() => navigate('/collections/kurtas')}>Kurtas & Sets</span>
-            <span onClick={() => navigate('/collections/festive')}>Festive Wear</span>
-          </div>
+          <ul>
+            {headerLinks.map((link) => (
+              <li key={link.label}>
+                <Link to={link.path}>{link.label}</Link>
+              </li>
+            ))}
+          </ul>
+        </div>
 
-          {/* Account */}
-          <div className="footer-col">
-            <h4>ACCOUNT</h4>
-            <span onClick={() => navigate('/login')}>Login</span>
-            <span onClick={() => navigate('/register')}>Register</span>
-            <span onClick={() => navigate('/orders')}>My Orders</span>
-            <span onClick={() => navigate('/wishlist')}>Wishlist</span>
-            <span onClick={() => navigate('/cart')}>Cart</span>
-          </div>
+        {/* My Account */}
+        <div className="footer-column">
+          <h3>MY ACCOUNT</h3>
 
-          {/* Contact */}
-          <div className="footer-col">
-            <h4>CONTACT</h4>
-            <a href="mailto:Nayrafashions43@gmail.com">Nayrafashions43@gmail.com</a>
-            <a href="https://www.instagram.com/nayrafashions10?igsh=MWF1dXRzaWQwOWgxYQ=="
-              target="_blank" rel="noreferrer">
-              @nayrafashions10
+          <ul>
+            {accountLinks.map((link) => (
+              <li key={link.label}>
+                <Link to={link.path}>{link.label}</Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Policies */}
+        <div className="footer-column">
+          <h3>POLICIES</h3>
+
+          <ul>
+            {policyLinks.map((link) => (
+              <li key={link.path}>
+                <Link to={link.path}>{link.label}</Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Contact Us */}
+        <div className="footer-column footer-contact">
+          <h3>CONTACT US</h3>
+
+          <p>
+            <FaEnvelope className="footer-contact-icon" />
+            <a href="mailto:nayrafashions43@gmail.com">
+              nayrafashions43@gmail.com
             </a>
-            <a href="tel:+919677328864">+91 9677328864</a>
-          </div>
+          </p>
 
+          <p>
+            <FaPhoneAlt className="footer-contact-icon" />
+            <a href="tel:+919677328864">+91 9677328864</a>
+          </p>
+
+          <p>
+            <FaMapMarkerAlt className="footer-contact-icon" />
+            <span>
+              Shop No. 4, 3rd Floor, BBC Plaza, Near Sony Center, North Usman
+              Road, T. Nagar, Chennai, Tamil Nadu – 600017
+            </span>
+          </p>
         </div>
       </div>
 
       {/* Bottom Footer */}
       <div className="footer-bottom">
-        <p>© 2026 Nayra Fashions. All rights reserved.</p>
-      </div>
+        <p>
+          © {new Date().getFullYear()} Nayra Fashions. All rights reserved.
+        </p>
 
+        <div className="footer-bottom-links">
+          <Link to="/privacy-policy">Privacy</Link>
+          <span>|</span>
+          <Link to="/terms-and-conditions">Terms</Link>
+        </div>
+      </div>
     </footer>
   );
 };

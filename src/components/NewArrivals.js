@@ -11,7 +11,15 @@ const badgeColors = {
   sale: '#2C5F2E',
 };
 
+const FALLBACK_IMAGE =
+  'https://images.unsplash.com/photo-1583391733956-6c78276477e2?w=500&q=80';
+
 const SLIDE_THRESHOLD = 5;
+const MAX_PRODUCTS = 8;
+
+// Only products whose badge is "new" belong in this section
+const hasNewBadge = product =>
+  String(product.badge || '').toLowerCase() === 'new';
 
 const NewArrivals = () => {
   const [products, setProducts] = useState([]);
@@ -20,34 +28,33 @@ const NewArrivals = () => {
   const { user } = useAuth();
 
   useEffect(() => {
-    productsAPI.getNewArrivals()
+    productsAPI
+      .getAll({ ordering: '-created_at', page_size: 100 })
       .then(data => {
         const items = Array.isArray(data) ? data : data.results || [];
-        if (items.length > 0) {
-          setProducts(items.slice(0, 8));
-        } else {
-          return productsAPI.getAll({ ordering: '-created_at', page_size: 8 })
-            .then(d => setProducts(Array.isArray(d) ? d.slice(0, 8) : (d.results || []).slice(0, 8)));
-        }
+        setProducts(items.filter(hasNewBadge).slice(0, MAX_PRODUCTS));
       })
-      .catch(() => {
-        productsAPI.getAll({ ordering: '-created_at', page_size: 8 })
-          .then(d => setProducts(Array.isArray(d) ? d.slice(0, 8) : (d.results || []).slice(0, 8)))
-          .catch(() => setProducts([]));
+      .catch(error => {
+        console.error('Failed to load new arrivals:', error);
+        setProducts([]);
       })
       .finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {
     if (user) {
-      wishlistAPI.get()
+      wishlistAPI
+        .get()
         .then(data => setWishlist((data || []).map(p => p.id)))
         .catch(() => {});
     }
   }, [user]);
 
-  const toggleWishlist = async (productId) => {
-    if (!user) { window.location.href = '/login'; return; }
+  const toggleWishlist = async productId => {
+    if (!user) {
+      window.location.href = '/login';
+      return;
+    }
     await wishlistAPI.toggle(productId);
     setWishlist(prev =>
       prev.includes(productId)
@@ -56,24 +63,27 @@ const NewArrivals = () => {
     );
   };
 
-  if (loading) return (
-    <section className="arrivals-section">
-      <div className="section-header">
-        <h2 className="section-title">NEW ARRIVALS</h2>
-        <div className="section-divider" />
-      </div>
-      <div className="arrivals-grid arrivals-grid-static">
-        {[1, 2, 3, 4].map(i => (
-          <div key={i} className="arrivals-card skeleton">
-            <div className="arrivals-image-wrap arrivals-skeleton-img" />
-            <div className="arrivals-skeleton-text" />
-            <div className="arrivals-skeleton-text short" />
-          </div>
-        ))}
-      </div>
-    </section>
-  );
+  if (loading) {
+    return (
+      <section className="arrivals-section">
+        <div className="section-header">
+          <h2 className="section-title">NEW ARRIVALS</h2>
+          <div className="section-divider" />
+        </div>
+        <div className="arrivals-grid arrivals-grid-static">
+          {[1, 2, 3, 4].map(i => (
+            <div key={i} className="arrivals-card skeleton">
+              <div className="arrivals-image-wrap arrivals-skeleton-img" />
+              <div className="arrivals-skeleton-text" />
+              <div className="arrivals-skeleton-text short" />
+            </div>
+          ))}
+        </div>
+      </section>
+    );
+  }
 
+  // No product has the "new" badge -> hide the whole section
   if (products.length === 0) return null;
 
   const shouldSlide = products.length > SLIDE_THRESHOLD;
@@ -85,23 +95,35 @@ const NewArrivals = () => {
     <div key={key} className="arrivals-card">
       <Link to={`/products/${product.slug}`} className="arrivals-image-wrap">
         <img
-          src={product.primary_image || 'https://images.unsplash.com/photo-1583391733956-6c78276477e2?w=500&q=80'}
+          src={product.primary_image || FALLBACK_IMAGE}
           alt={product.name}
           className="arrivals-image"
           onError={e => {
-            e.target.src = 'https://images.unsplash.com/photo-1583391733956-6c78276477e2?w=500&q=80';
+            e.target.onerror = null;
+            e.target.src = FALLBACK_IMAGE;
           }}
         />
         {product.badge && (
-          <span className="arrivals-badge" style={{ backgroundColor: badgeColors[product.badge] }}>
+          <span
+            className="arrivals-badge"
+            style={{ backgroundColor: badgeColors[product.badge] }}
+          >
             {product.badge.toUpperCase()}
           </span>
         )}
         <button
-          className={`arrivals-wishlist-btn ${wishlist.includes(product.id) ? 'active' : ''}`}
-          onClick={(e) => { e.preventDefault(); toggleWishlist(product.id); }}
+          className={`arrivals-wishlist-btn ${
+            wishlist.includes(product.id) ? 'active' : ''
+          }`}
+          onClick={e => {
+            e.preventDefault();
+            toggleWishlist(product.id);
+          }}
         >
-          <Heart size={16} fill={wishlist.includes(product.id) ? '#7B1B1B' : 'none'} />
+          <Heart
+            size={16}
+            fill={wishlist.includes(product.id) ? '#7B1B1B' : 'none'}
+          />
         </button>
       </Link>
 
@@ -110,18 +132,26 @@ const NewArrivals = () => {
           <h3 className="arrivals-name">{product.name}</h3>
         </Link>
         <div className="arrivals-pricing">
-          <span className="arrivals-price-current">₹{Number(product.price).toLocaleString()}</span>
+          <span className="arrivals-price-current">
+            ₹{Number(product.price).toLocaleString()}
+          </span>
           {product.original_price && (
-            <span className="arrivals-price-original">₹{Number(product.original_price).toLocaleString()}</span>
+            <span className="arrivals-price-original">
+              ₹{Number(product.original_price).toLocaleString()}
+            </span>
           )}
           {product.discount_percent > 0 && (
-            <span className="arrivals-price-discount">{product.discount_percent}% off</span>
+            <span className="arrivals-price-discount">
+              {product.discount_percent}% off
+            </span>
           )}
         </div>
         {Array.isArray(product.sizes) && product.sizes.length > 0 && (
           <div className="arrivals-sizes">
             {product.sizes.map(size => (
-              <span key={size} className="arrivals-size-chip">{size}</span>
+              <span key={size} className="arrivals-size-chip">
+                {size}
+              </span>
             ))}
           </div>
         )}
@@ -139,12 +169,14 @@ const NewArrivals = () => {
       {shouldSlide ? (
         <div className="arrivals-scroll-container">
           <div className="arrivals-grid arrivals-grid-slide">
-            {trackProducts.map((product, idx) => renderCard(product, `${product.id}-${idx}`))}
+            {trackProducts.map((product, idx) =>
+              renderCard(product, `${product.id}-${idx}`)
+            )}
           </div>
         </div>
       ) : (
         <div className="arrivals-grid arrivals-grid-static">
-          {trackProducts.map((product) => renderCard(product, product.id))}
+          {trackProducts.map(product => renderCard(product, product.id))}
         </div>
       )}
 
@@ -153,7 +185,6 @@ const NewArrivals = () => {
           <button className="btn-view-all">VIEW ALL PRODUCTS</button>
         </Link>
       </div>
-
     </section>
   );
 };

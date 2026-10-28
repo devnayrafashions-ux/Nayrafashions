@@ -9,6 +9,16 @@ import './ProductsPage.css';
 
 const badgeColors = { new: '#7B1B1B', bestseller: '#C8A96E', sale: '#2C5F2E' };
 
+// Turns "Festive Collections" / "Festive-Collections" into "festive-collections"
+// so a category can still be matched when its saved slug differs from the
+// slug used in a menu link.
+const slugify = (text) =>
+  String(text || '')
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
 const ProductCard = ({ product, wishlist, onWishlist, onAddCart }) => (
   <div className="pc-card">
     <Link to={`/products/${product.slug}`} className="pc-image-wrap">
@@ -63,6 +73,7 @@ const ProductsPage = () => {
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [categoriesLoaded, setCategoriesLoaded] = useState(false);
   const [loading, setLoading] = useState(true);
   const [totalCount, setTotalCount] = useState(0);
   const [wishlist, setWishlist] = useState([]);
@@ -73,28 +84,54 @@ const ProductsPage = () => {
 
   const BADGE_SLUGS = { 'new-arrivals': 'new', 'bestsellers': 'bestseller', 'on-sale': 'sale' };
 
-  // NEW: same pattern as BADGE_SLUGS. These slugs are type-level landing
-  // pages (all Jewellery, all Hair Accessories) rather than a specific
-  // sub-category — they map to Category.product_type, not Category.slug.
+  // Type-level landing pages (all Jewellery, all Hair Accessories) map to
+  // Category.product_type, not Category.slug.
   const TYPE_SLUGS = { 'jewellery': 'jewelry', 'hair-accessories': 'hair_accessory' };
+
+  // NEW: collection pages driven by a checkbox on the product
+  // (Product.is_budget_friendly / Product.is_own_brand) instead of a category,
+  // so a product can stay in "Cotton Set" AND be in these collections.
+  const FLAG_SLUGS = {
+    'budget-friendly': 'is_budget_friendly',
+    'own-brand': 'is_own_brand',
+  };
 
   const slugIsBadge = slug && BADGE_SLUGS[slug];
   const slugIsType = slug && TYPE_SLUGS[slug];
+  const slugIsFlag = slug && FLAG_SLUGS[slug];
 
-  const selectedCategory = (slugIsBadge || slugIsType) ? '' : (slug || searchParams.get('category') || '');
+  const rawCategory = (slugIsBadge || slugIsType || slugIsFlag)
+    ? ''
+    : (slug || searchParams.get('category') || '');
+
+  // Match by real slug first; if none matches, match by category name
+  // (e.g. "Festive Collections" -> "festive-collections"). This keeps menu
+  // links working even when a category's saved slug is different.
+  const matchedCategory =
+    categories.find(c => c.slug === rawCategory) ||
+    categories.find(c => slugify(c.name) === rawCategory);
+
+  const selectedCategory = matchedCategory ? matchedCategory.slug : rawCategory;
+
   const selectedBadge = slugIsBadge ? BADGE_SLUGS[slug] : (searchParams.get('badge') || '');
   const selectedType = slugIsType ? TYPE_SLUGS[slug] : '';
+  const selectedFlag = slugIsFlag ? FLAG_SLUGS[slug] : '';
   const currentPage = parseInt(searchParams.get('page') || '1');
   const sortBy = searchParams.get('sort') || '-created_at';
   const searchQuery = searchParams.get('search') || '';
   const isFeatured = searchParams.get('featured') || '';
 
   const fetchProducts = useCallback(async () => {
+    // When the page is for a category, wait until categories are loaded so
+    // the name-based match can resolve the real slug first.
+    if (rawCategory && !categoriesLoaded) return;
+
     setLoading(true);
     try {
       const params = { page: currentPage, ordering: sortBy };
       if (selectedCategory) params['category__slug'] = selectedCategory;
       if (selectedType) params['category__product_type'] = selectedType;
+      if (selectedFlag) params[selectedFlag] = true;
       if (selectedBadge) params.badge = selectedBadge;
       if (searchQuery) params.search = searchQuery;
       if (isFeatured) params.is_featured = true;
@@ -103,14 +140,15 @@ const ProductsPage = () => {
       setTotalCount(data.count || 0);
     } catch { setProducts([]); }
     finally { setLoading(false); }
-  }, [currentPage, selectedCategory, selectedType, selectedBadge, sortBy, searchQuery, isFeatured]);
+  }, [rawCategory, categoriesLoaded, currentPage, selectedCategory, selectedType, selectedFlag, selectedBadge, sortBy, searchQuery, isFeatured]);
 
   useEffect(() => { fetchProducts(); }, [fetchProducts]);
 
   useEffect(() => {
     categoriesAPI.getAll()
       .then(d => setCategories(Array.isArray(d) ? d : d.results || []))
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setCategoriesLoaded(true));
   }, []);
 
   useEffect(() => {
@@ -164,27 +202,23 @@ const ProductsPage = () => {
 
   const badgeLabels = { new: 'New Arrivals', bestseller: 'Bestsellers', sale: 'On Sale' };
   const typeLabels = { jewelry: 'Jewellery', hair_accessory: 'Hair Accessories' };
+  const flagLabels = { is_budget_friendly: 'Budget Friendly', is_own_brand: 'Own Brand' };
   const pageTitle = selectedCategory
     ? categories.find(c => c.slug === selectedCategory)?.name || 'Collection'
     : selectedType
     ? typeLabels[selectedType]
+    : selectedFlag
+    ? flagLabels[selectedFlag]
     : isFeatured ? 'Featured'
     : selectedBadge ? (badgeLabels[selectedBadge] || 'Collection')
     : 'All Products';
 
-  // FIX: only treat this as a "type mode" page (Jewellery / Hair
-  // Accessories) if the matched category's product_type is one we
-  // actually have a label for. Previously this picked up ANY
-  // product_type (e.g. a plain dress category), which caused
-  // "All undefined" to render and made the "All" option re-navigate
-  // to the same category instead of clearing filters.
+  // Only treat this as a "type mode" page (Jewellery / Hair Accessories) if
+  // the matched category's product_type is one we actually have a label for.
   const matchedType = categories.find(c => c.slug === selectedCategory)?.product_type;
   const activeType = selectedType || (typeLabels[matchedType] ? matchedType : '') || '';
 
-  // NEW: sidebar shows only sub-categories relevant to the current context.
-  // On a type-level page (Jewellery, Hair Accessories) or when a specific
-  // sub-category of that type is selected, narrow the list to that type.
-  // On the general /products page, show everything as before.
+  // Sidebar shows only sub-categories relevant to the current context.
   const sidebarCategories = activeType
     ? categories.filter(c => c.product_type === activeType)
     : categories;
@@ -238,10 +272,8 @@ const ProductsPage = () => {
                 checked={!selectedCategory}
                 onChange={() => {
                   if (activeType) {
-                    // FIX: resolve the type-level slug (e.g. "jewellery")
-                    // rather than reusing `slug`, which may be a
-                    // sub-category slug (e.g. "earrings") when this is
-                    // clicked from within a sub-category page.
+                    // Resolve the type-level slug (e.g. "jewellery") rather
+                    // than reusing `slug`, which may be a sub-category slug.
                     const typeSlug = Object.keys(TYPE_SLUGS).find(k => TYPE_SLUGS[k] === activeType);
                     navigate(`/collections/${typeSlug || slug}`);
                   } else {
@@ -249,8 +281,6 @@ const ProductsPage = () => {
                   }
                 }}
               />
-              {/* FIX: guard against undefined label so this never renders
-                  "All undefined" for a non-type category. */}
               {activeType ? `All ${typeLabels[activeType] || ''}`.trim() : 'All Categories'}
             </label>
             {sidebarCategories.map(cat => (
@@ -274,7 +304,7 @@ const ProductsPage = () => {
               </label>
             ))}
           </div>
-          {(selectedCategory || selectedBadge || searchQuery) && (
+          {(selectedCategory || selectedBadge || selectedFlag || searchQuery) && (
             <button className="clear-filters" onClick={() => navigate('/products')}>
               CLEAR ALL FILTERS
             </button>

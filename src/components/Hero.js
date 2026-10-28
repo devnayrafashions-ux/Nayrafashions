@@ -1,66 +1,94 @@
+
 import React, { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import './Hero.css';
 
-// Place these three files in your public/images folder (or swap for your
-// Django media URLs, e.g. `${process.env.REACT_APP_API_URL}/media/hero/...`)
-const HERO_IMAGES = [
-  '/images/hero-jewelry.png',
-  '/images/hero-hair-accessory.png',
+// Desktop: existing landscape images
+
+const DESKTOP_IMAGES = [
+  '/images/hero-jewelry.jpeg',
+  '/images/hero-hair-accessory.jpeg',
   '/images/hero-blouse.jpeg',
 ];
 
-const SLIDE_DURATION = 5000; // ms each image stays on screen
+
+const MOBILE_IMAGES = [
+  '/images/mobile-portrait-1.jpeg',
+  '/images/mobile-portrait-2.jpeg',
+  '/images/mobile-portrait-3.jpeg',
+];
+
+
+
+
+
+const SLIDE_DURATION = 5000;
 
 const Hero = () => {
   const heroRef = useRef(null);
-  const navigate = useNavigate();
   const [activeIndex, setActiveIndex] = useState(0);
+  const [isMobile, setIsMobile] = useState(
+    () => window.matchMedia('(max-width: 768px)').matches
+  );
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 768px)');
+
+    const handleScreenChange = (event) => {
+      setIsMobile(event.matches);
+      setActiveIndex(0);
+    };
+
+    mediaQuery.addEventListener('change', handleScreenChange);
+
+    return () => {
+      mediaQuery.removeEventListener('change', handleScreenChange);
+    };
+  }, []);
+
+  const images = isMobile ? MOBILE_IMAGES : DESKTOP_IMAGES;
 
   useEffect(() => {
     const hero = heroRef.current;
+
     if (!hero) return;
-    setTimeout(() => hero.classList.add('loaded'), 100);
+
+    const timeout = setTimeout(() => {
+      hero.classList.add('loaded');
+    }, 100);
+
+    return () => clearTimeout(timeout);
   }, []);
 
   useEffect(() => {
+    setActiveIndex(0);
+
     const interval = setInterval(() => {
-      setActiveIndex((prev) => (prev + 1) % HERO_IMAGES.length);
+      setActiveIndex((prev) => (prev + 1) % images.length);
     }, SLIDE_DURATION);
+
     return () => clearInterval(interval);
-  }, []);
+  }, [isMobile, images.length]);
 
   return (
     <section className="hero" ref={heroRef}>
       <div className="hero-bg">
-        {HERO_IMAGES.map((src, i) => (
+        {images.map((src, index) => (
           <div
             key={src}
-            className={`hero-bg-slide ${i === activeIndex ? 'active' : ''}`}
-            style={{ backgroundImage: `url(${src})` }}
+            className={`hero-bg-slide ${
+              index === activeIndex ? 'active' : ''
+            }`}
+            style={{ backgroundImage: `url("${src}")` }}
           />
         ))}
+
         <div className="hero-overlay" />
       </div>
+
       <div className="hero-content">
-        <p className="hero-season">SPRING / SUMMER 2026</p>
-        <h1 className="hero-title">
-          <span>NEW</span>
-          <span>COLLECTION</span>
-        </h1>
         <div className="hero-divider" />
-        <p className="hero-subtitle">
-          Elegance redefined — discover pieces crafted for the modern woman
-        </p>
-        <div className="hero-buttons">
-          <button className="btn-gold" onClick={() => navigate('/products')}>
-            EXPLORE COLLECTION
-          </button>
-          <button className="btn-outline" onClick={() => navigate('/products')}>
-            VIEW ALL
-          </button>
-        </div>
       </div>
+
       <div className="hero-scroll">
         <span>SCROLL</span>
         <div className="scroll-line" />

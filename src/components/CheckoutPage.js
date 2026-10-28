@@ -1,22 +1,27 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { ordersAPI, paymentsAPI } from '../services/api';
+import { paymentsAPI } from '../services/api';
 import './CheckoutPage.css';
 
-// Keep this in sync with CartPage.jsx (and the Navbar.jsx banner text).
 const FREE_SHIPPING_THRESHOLD = 2999;
+const SHIPPING_FEE = 99;
 
 const loadRazorpay = () =>
-  new Promise(resolve => {
-    if (window.Razorpay) { resolve(true); return; }
-    const s = document.createElement('script');
-    s.src = 'https://checkout.razorpay.com/v1/checkout.js';
-    s.onload = () => resolve(true);
-    s.onerror = () => resolve(false);
-    document.body.appendChild(s);
+  new Promise((resolve) => {
+    if (window.Razorpay) {
+      resolve(true);
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
   });
 
 const CheckoutPage = () => {
@@ -24,6 +29,7 @@ const CheckoutPage = () => {
   const { user } = useAuth();
   const { success, error } = useToast();
   const navigate = useNavigate();
+
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
 
@@ -31,130 +37,277 @@ const CheckoutPage = () => {
     full_name: `${user?.first_name || ''} ${user?.last_name || ''}`.trim(),
     email: user?.email || '',
     phone: user?.phone || '',
-    address_line1: '', address_line2: '',
-    city: '', state: '', pincode: '',
+    address_line1: '',
+    address_line2: '',
+    city: '',
+    state: '',
+    pincode: '',
     notes: '',
   });
 
-  const set = (k) => (e) => setAddr(p => ({ ...p, [k]: e.target.value }));
+  const set = (key) => (event) => {
+    setAddr((previous) => ({
+      ...previous,
+      [key]: event.target.value,
+    }));
+  };
 
-  const shipping = cartTotal >= FREE_SHIPPING_THRESHOLD ? 0 : 99;
-  const grandTotal = cartTotal + shipping;
+  // Display estimates only. The backend calculates the authoritative total.
+  const shipping =
+    Number(cartTotal) >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE;
+
+  const grandTotal = Number(cartTotal) + shipping;
+
+  const getCheckoutItems = () =>
+    cart.map((item) => {
+      const selectedSize =
+        item.selectedSize ||
+        item.product?.selectedSize ||
+        item.variant?.size ||
+        '';
+
+      const variantId =
+        item.variant?.id ||
+        item.variant_id ||
+        item.product?.selectedVariant?.id ||
+        null;
+
+      return {
+        product_id: item.product.id,
+        variant_id: variantId,
+        quantity: Number(item.quantity),
+        size: selectedSize,
+        color: item.variant?.color || '',
+      };
+    });
+
+  const validateAddress = () => {
+    const requiredFields = [
+      ['full_name', 'Full name'],
+      ['email', 'Email'],
+      ['phone', 'Phone'],
+      ['address_line1', 'Address line 1'],
+      ['city', 'City'],
+      ['state', 'State'],
+      ['pincode', 'Pincode'],
+    ];
+
+    for (const [key, label] of requiredFields) {
+      if (!String(addr[key] || '').trim()) {
+        error(`Please enter ${label}.`);
+        return false;
+      }
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(addr.email.trim())) {
+      error('Please enter a valid email address.');
+      return false;
+    }
+
+    if (!/^\d{6}$/.test(addr.pincode.trim())) {
+      error('Please enter a valid 6-digit pincode.');
+      return false;
+    }
+
+    if (!/^\+?[\d\s()-]{10,15}$/.test(addr.phone.trim())) {
+      error('Please enter a valid phone number.');
+      return false;
+    }
+
+    return true;
+  };
 
   const handlePlaceOrder = async () => {
+    if (loading) return;
+
     setLoading(true);
+
     try {
-      // 1. Load Razorpay script first
       const loaded = await loadRazorpay();
+
       if (!loaded) {
-        error('Payment gateway failed to load');
-        setLoading(false);
+        error('Payment gateway failed to load. Please try again.');
         return;
       }
 
-      // 2. Create a Razorpay order (just a payment intent, NOT a DB order yet)
+      if (!cart.length) {
+        error('Your cart is empty.');
+        navigate('/cart');
+        return;
+      }
+
+      const items = getCheckoutItems();
+
+      if (
+        items.some(
+          (item) =>
+            !item.product_id ||
+            !Number.isInteger(item.quantity) ||
+            item.quantity < 1
+        )
+      ) {
+        error('Your cart contains an invalid item. Please review your cart.');
+        return;
+      }
+
+      // The backend calculates prices, shipping and the final total.
+      // It creates both the pending Order and its Payment record.
       const rpOrder = await paymentsAPI.createRazorpayOrder({
-        amount: grandTotal,
-        currency: 'INR',
+        ...addr,
+        items,
       });
 
-      // 3. Open Razorpay
+      if (!rpOrder?.razorpay_order_id || !rpOrder?.key) {
+        throw new Error('Unable to initialize the payment. Please try again.');
+      }
+
       const options = {
         key: rpOrder.key,
         amount: rpOrder.amount,
-        currency: rpOrder.currency,
+        currency: rpOrder.currency || 'INR',
         order_id: rpOrder.razorpay_order_id,
         name: 'Nayra Fashions',
-        description: 'Order Payment',
+        description: `Order ${rpOrder.order_number || ''}`,
+
         prefill: {
           name: addr.full_name,
           email: addr.email,
           contact: addr.phone,
         },
-        theme: { color: '#7B1B1B' },
+
+        theme: {
+          color: '#7B1B1B',
+        },
+
         method: {
-          upi: true, card: true, netbanking: true, wallet: true, paylater: false,
+          upi: true,
+          card: true,
+          netbanking: true,
+          wallet: true,
+          paylater: false,
         },
 
         handler: async (response) => {
           try {
-            // 4. Payment succeeded → NOW create the order in DB
-            const orderData = {
-              ...addr,
-              subtotal: cartTotal,
-              shipping_charge: shipping,
-              total: grandTotal,
-              razorpay_order_id: response.razorpay_order_id,
-              items: cart.map(item => ({
-                product_id: item.product.id,
-                product_name: item.product.name,
-                product_price: item.product.price,
-                quantity: item.quantity,
-                // FIX: size was previously read from item.variant?.size, but
-                // CartContext never populates `variant` for size selection —
-                // it stores the chosen size as item.selectedSize /
-                // item.product.selectedSize. This was silently saving an
-                // empty size on every dress order regardless of what the
-                // customer picked.
-                size: item.selectedSize || item.product?.selectedSize || item.variant?.size || '',
-                color: item.variant?.color || '',
-                // Snapshot the type so My Orders / Admin Orders can always
-                // tell dress vs jewelry vs hair accessory apart, even if the
-                // product or its category is edited/deleted afterward.
-                product_type: item.product?.product_type || '',
-              })),
-            };
-
-            const order = await ordersAPI.createOrder(orderData);
-
-            // 5. Verify payment signature
-            await paymentsAPI.verifyPayment({
+            // Verify the payment with the backend.
+            const result = await paymentsAPI.verifyPayment({
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_order_id: response.razorpay_order_id,
               razorpay_signature: response.razorpay_signature,
             });
 
+            // IMPORTANT:
+            // HTTP 202 means payment is authorized but not confirmed.
+            // Do not clear the cart or claim the order is confirmed.
+            if (result?.status === 'authorized') {
+              error(
+                result.detail ||
+                  'Your payment is being confirmed. Please check My Orders shortly.'
+              );
+              return;
+            }
+
+            // Only a verified, captured payment should reach this point.
+            if (!result?.order_id) {
+              throw new Error(
+                'The server has not confirmed your order yet.'
+              );
+            }
+
             clearCart();
-            success('Payment successful!');
-            navigate(`/order-success/${order.id}`);
-          } catch {
-            error(
-              'Payment done but order saving failed. Contact support with payment ID: ' +
-              response.razorpay_payment_id
+
+            success('Payment successful! Your order is confirmed.');
+
+            // Use the route configured in App.js.
+            navigate('/orders', { replace: true });
+          } catch (verificationError) {
+            console.error(
+              'Payment verification/order confirmation failed:',
+              verificationError
             );
+
+            const serverMessage =
+              verificationError?.response?.data?.error ||
+              verificationError?.message;
+
+            error(
+              `${serverMessage || 'We could not confirm your order yet.'} Payment ID: ${response.razorpay_payment_id}`
+            );
+          } finally {
             setLoading(false);
           }
         },
 
         modal: {
-          ondismiss: () => { setLoading(false); },
+          ondismiss: () => {
+            setLoading(false);
+          },
         },
       };
 
-      const rp = new window.Razorpay(options);
-      rp.open();
+      const razorpay = new window.Razorpay(options);
 
+      razorpay.on('payment.failed', (response) => {
+        console.error('Razorpay payment failed:', response.error);
+
+        error(
+          response.error?.description ||
+            'Payment failed. You can try again.'
+        );
+
+        setLoading(false);
+      });
+
+      razorpay.open();
     } catch (err) {
-      error(err.message || 'Could not initiate payment');
+      console.error('Checkout initialization failed:', err);
+
+      const message =
+        err?.response?.data?.error ||
+        err?.message ||
+        'Could not initiate payment. Please try again.';
+
+      error(message);
       setLoading(false);
     }
   };
 
-  if (cart.length === 0) {
-    navigate('/cart');
-    return null;
+  if (!cart.length) {
+    return (
+      <div className="page-wrapper checkout-page">
+        <div className="checkout-form-section">
+          <h2>Your cart is empty</h2>
+          <p>Add some products before proceeding to checkout.</p>
+
+          <button
+            type="button"
+            className="btn-gold checkout-next-btn"
+            onClick={() => navigate('/cart')}
+          >
+            RETURN TO CART
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="page-wrapper checkout-page">
       <div className="breadcrumb">
-        <a href="/">Home</a> / <a href="/cart">Cart</a> / <span>Checkout</span>
+        <a href="/">Home</a> / <a href="/cart">Cart</a> /{' '}
+        <span>Checkout</span>
       </div>
 
       <div className="checkout-steps">
-        <div className={`step ${step >= 1 ? 'active' : ''}`}><span>1</span> Shipping</div>
+        <div className={`step ${step >= 1 ? 'active' : ''}`}>
+          <span>1</span> Shipping
+        </div>
+
         <div className="step-line" />
-        <div className={`step ${step >= 2 ? 'active' : ''}`}><span>2</span> Review & Pay</div>
+
+        <div className={`step ${step >= 2 ? 'active' : ''}`}>
+          <span>2</span> Review &amp; Pay
+        </div>
       </div>
 
       <div className="checkout-layout">
@@ -162,6 +315,7 @@ const CheckoutPage = () => {
           {step === 1 && (
             <div className="checkout-form-section">
               <h2 className="section-heading">Shipping Details</h2>
+
               <div className="form-row">
                 <div className="form-group">
                   <label>Full Name</label>
@@ -173,6 +327,7 @@ const CheckoutPage = () => {
                     placeholder="Priya Sharma"
                   />
                 </div>
+
                 <div className="form-group">
                   <label>Phone</label>
                   <input
@@ -210,8 +365,16 @@ const CheckoutPage = () => {
               <div className="form-group">
                 <label>
                   Address Line 2{' '}
-                  <span style={{ color: 'var(--text-light)', fontWeight: 400 }}>(optional)</span>
+                  <span
+                    style={{
+                      color: 'var(--text-light)',
+                      fontWeight: 400,
+                    }}
+                  >
+                    (optional)
+                  </span>
                 </label>
+
                 <input
                   type="text"
                   value={addr.address_line2}
@@ -231,6 +394,7 @@ const CheckoutPage = () => {
                     placeholder="Chennai"
                   />
                 </div>
+
                 <div className="form-group">
                   <label>State</label>
                   <input
@@ -241,6 +405,7 @@ const CheckoutPage = () => {
                     placeholder="Tamil Nadu"
                   />
                 </div>
+
                 <div className="form-group">
                   <label>Pincode</label>
                   <input
@@ -257,8 +422,16 @@ const CheckoutPage = () => {
               <div className="form-group">
                 <label>
                   Order Notes{' '}
-                  <span style={{ color: 'var(--text-light)', fontWeight: 400 }}>(optional)</span>
+                  <span
+                    style={{
+                      color: 'var(--text-light)',
+                      fontWeight: 400,
+                    }}
+                  >
+                    (optional)
+                  </span>
                 </label>
+
                 <textarea
                   rows="2"
                   value={addr.notes}
@@ -268,21 +441,12 @@ const CheckoutPage = () => {
               </div>
 
               <button
+                type="button"
                 className="btn-gold checkout-next-btn"
                 onClick={() => {
-                  if (
-                    !addr.full_name ||
-                    !addr.phone ||
-                    !addr.email ||
-                    !addr.address_line1 ||
-                    !addr.city ||
-                    !addr.state ||
-                    !addr.pincode
-                  ) {
-                    error('Please fill all required fields');
-                    return;
+                  if (validateAddress()) {
+                    setStep(2);
                   }
-                  setStep(2);
                 }}
               >
                 CONTINUE TO REVIEW →
@@ -295,18 +459,48 @@ const CheckoutPage = () => {
               <div className="review-address">
                 <div className="review-address-header">
                   <h2 className="section-heading">Shipping To</h2>
-                  <button className="btn-outline edit-btn" onClick={() => setStep(1)}>EDIT</button>
+
+                  <button
+                    type="button"
+                    className="btn-outline edit-btn"
+                    disabled={loading}
+                    onClick={() => setStep(1)}
+                  >
+                    EDIT
+                  </button>
                 </div>
+
                 <p className="addr-name">{addr.full_name}</p>
-                <p>{addr.address_line1}{addr.address_line2 && ', ' + addr.address_line2}</p>
-                <p>{addr.city}, {addr.state} — {addr.pincode}</p>
-                <p>{addr.phone} · {addr.email}</p>
+
+                <p>
+                  {addr.address_line1}
+                  {addr.address_line2 && `, ${addr.address_line2}`}
+                </p>
+
+                <p>
+                  {addr.city}, {addr.state} — {addr.pincode}
+                </p>
+
+                <p>
+                  {addr.phone} · {addr.email}
+                </p>
               </div>
 
-              <h2 className="section-heading" style={{ marginTop: 32 }}>Order Items</h2>
+              <h2
+                className="section-heading"
+                style={{ marginTop: 32 }}
+              >
+                Order Items
+              </h2>
+
               <div className="review-items">
-                {cart.map(item => {
-                  const size = item.selectedSize || item.product?.selectedSize || item.variant?.size || '';
+                {cart.map((item) => {
+                  const size =
+                    item.selectedSize ||
+                    item.product?.selectedSize ||
+                    item.variant?.size ||
+                    '';
+
                   return (
                     <div key={item.key} className="review-item">
                       <img
@@ -316,20 +510,30 @@ const CheckoutPage = () => {
                         }
                         alt={item.product.name}
                       />
+
                       <div className="review-item-info">
-                        <p className="review-item-name">{item.product.name}</p>
-                        {/* Only ever renders for dresses — size/variant.color are
-                            empty for jewelry & hair accessories */}
+                        <p className="review-item-name">
+                          {item.product.name}
+                        </p>
+
                         {(size || item.variant?.color) && (
                           <p className="review-item-variant">
                             {size && `Size: ${size}`}
-                            {item.variant?.color && ` · Color: ${item.variant.color}`}
+                            {item.variant?.color &&
+                              ` · Color: ${item.variant.color}`}
                           </p>
                         )}
-                        <p className="review-item-qty">Qty: {item.quantity}</p>
+
+                        <p className="review-item-qty">
+                          Qty: {item.quantity}
+                        </p>
                       </div>
+
                       <p className="review-item-price">
-                        ₹{(Number(item.product.price) * item.quantity).toLocaleString()}
+                        ₹
+                        {(
+                          Number(item.product.price) * item.quantity
+                        ).toLocaleString('en-IN')}
                       </p>
                     </div>
                   );
@@ -337,14 +541,18 @@ const CheckoutPage = () => {
               </div>
 
               <button
+                type="button"
                 className="btn-gold pay-btn"
                 onClick={handlePlaceOrder}
                 disabled={loading}
               >
-                {loading ? 'PROCESSING...' : `PAY ₹${grandTotal.toLocaleString()}`}
+                {loading
+                  ? 'PROCESSING...'
+                  : `PAY ₹${grandTotal.toLocaleString('en-IN')}`}
               </button>
+
               <p className="pay-note">
-                You'll be redirected to Razorpay's secure payment gateway
+                Secure payment powered by Razorpay.
               </p>
             </div>
           )}
@@ -352,26 +560,50 @@ const CheckoutPage = () => {
 
         <div className="checkout-summary">
           <h3>Order Summary</h3>
+
           <div className="co-summary-items">
-            {cart.map(item => (
+            {cart.map((item) => (
               <div key={item.key} className="co-summary-item">
-                <span>{item.product.name} × {item.quantity}</span>
-                <span>₹{(Number(item.product.price) * item.quantity).toLocaleString()}</span>
+                <span>
+                  {item.product.name} × {item.quantity}
+                </span>
+
+                <span>
+                  ₹
+                  {(
+                    Number(item.product.price) * item.quantity
+                  ).toLocaleString('en-IN')}
+                </span>
               </div>
             ))}
           </div>
+
           <div className="co-summary-row">
-            <span>Subtotal</span>
-            <span>₹{cartTotal.toLocaleString()}</span>
+            <span>Subtotal (estimate)</span>
+            <span>
+              ₹{Number(cartTotal).toLocaleString('en-IN')}
+            </span>
           </div>
+
           <div className="co-summary-row">
-            <span>Shipping</span>
-            <span>{shipping === 0 ? 'FREE' : `₹${shipping}`}</span>
+            <span>Shipping (estimate)</span>
+            <span>
+              {shipping === 0
+                ? 'FREE'
+                : `₹${shipping.toLocaleString('en-IN')}`}
+            </span>
           </div>
+
           <div className="co-summary-total">
-            <span>Total</span>
-            <span>₹{grandTotal.toLocaleString()}</span>
+            <span>Estimated Total</span>
+            <span>
+              ₹{grandTotal.toLocaleString('en-IN')}
+            </span>
           </div>
+
+          <p className="pay-note">
+            Final pricing and shipping are confirmed by the server.
+          </p>
         </div>
       </div>
     </div>

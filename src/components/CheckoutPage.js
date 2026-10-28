@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
@@ -179,12 +178,18 @@ const CheckoutPage = () => {
           color: '#7B1B1B',
         },
 
-        method: {
-          upi: true,
-          card: true,
-          netbanking: true,
-          wallet: true,
-          paylater: false,
+        // Hide Wallet and every EMI-style option in the payment popup.
+        // UPI, Cards and Netbanking stay available.
+        config: {
+          display: {
+            hide: [
+              { method: 'wallet' },
+              { method: 'emi' },
+              { method: 'cardless_emi' },
+              { method: 'paylater' },
+            ],
+            preferences: { show_default_blocks: true },
+          },
         },
 
         handler: async (response) => {
